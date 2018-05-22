@@ -1,0 +1,252 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.6">
+  <POU Name="HLI_ChannelBlockSearch" Id="{2564dd2e-509e-45ed-8ab4-f2fa78472209}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK HLI_ChannelBlockSearch
+VAR_INPUT
+	nChan						: UDINT;			(* Number of channel *)
+	(* interface values *)
+	BlockSearch				: ST_BlockSearch;
+END_VAR
+VAR_IN_OUT
+	bStartWrite				: BOOL;			(* Edge signal *)
+	bStartRead				: BOOL;			(* Edge signal *)
+END_VAR
+VAR_OUTPUT
+	Busy						: BOOL;
+	Err						: BOOL;
+	nErrorState				: UINT;
+	(* interface values *)
+	nActType					: INT;
+	fActDistance			: LREAL;
+	bActAutoReturn			: BOOL;
+	nActDeviationMax		: UDINT;
+	nActBlockNumber		: DINT;
+	nActPass					: DINT;
+	nActBlockCount			: DINT;
+	(* current values *)
+	actualBlockNumber		: DINT := 0;
+	actualBlockCount		: DINT := 0;
+	actualBlockCount_AferReset : DINT := 0;
+	coveredDistance		: DINT;
+END_VAR
+VAR
+	pChannel					: POINTER TO HIGH_LEVEL_INTERFACE_CH;
+	nHliChIdx				: UDINT;
+	bReadStarted			: BOOL;
+	bWriteStarted			: BOOL;
+	rtStartRead				: R_TRIG;
+	rtStartWrite			: R_TRIG;
+
+	fbWriteType				: FB_BlockSearchWrite;
+	fbReadType				: FB_BlockSearchRead;
+
+	fbWriteCovDistance	: FB_BlockSearchWrite;
+	fbReadCovDistance		: FB_BlockSearchRead;
+
+	fbWriteAutoReturn		: FB_BlockSearchWrite;
+	fbReadAutoReturn		: FB_BlockSearchRead;
+
+	fbWriteDeviationMax	: FB_BlockSearchWrite;
+	fbReadDeviationMax	: FB_BlockSearchRead;
+
+	fbWriteBlockNumber	: FB_BlockSearchWrite;
+	fbReadBlockNumber		: FB_BlockSearchRead;
+	fbReadActBlockNumber	: FB_BlockSearchRead;
+
+	fbWriteBlockCount		: FB_BlockSearchWrite;
+	fbReadBlockCount		: FB_BlockSearchRead;
+	fbReadActBlockCount	: FB_BlockSearchRead;
+
+	fbWritePass				: FB_BlockSearchWrite;
+	fbReadPass				: FB_BlockSearchRead;
+
+	nIdxGrp					: UDINT;
+	fDist						: LREAL;
+	timer1					: TON;				(* Timer to read actual values cyclically *)
+	bStartReadAct			: BOOL;
+
+	channelMode 			: DWORD;
+	blockSearchStart		: BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: HLI_ChannelBlockSearch                            *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(* Author: MK                                                *)
+(*   Date: 21.12.2011                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+nHliChIdx := nChan - 1;
+
+IF nChan <= 0 OR gNrCh < nChan OR			(* check for channel no *)
+	gpCh[nHliChIdx] = 0 THEN					(* check for zero pointer *)
+	Err := TRUE;
+	RETURN; (* e x i t *)
+END_IF
+
+
+pChannel := gpCh[nHliChIdx];
+Err := FALSE;
+nIdxGrp := 16#00020100 + nChan;
+blockSearchStart := FALSE;
+
+
+(* ----------------------------------- *)
+(* --- write block search commands --- *)
+(* ----------------------------------- *)
+
+rtStartWrite(CLK:=bStartWrite);
+IF rtStartWrite.Q THEN
+	bWriteStarted := TRUE;
+	bStartWrite := FALSE; (* reset the HMI signal *)
+END_IF
+
+IF bWriteStarted THEN
+	Busy := TRUE;
+	IF BlockSearch.nType = 5 THEN
+		BlockSearch.nType := 3;								(* start position by block count *)
+
+		BlockSearch.bAutoReturn := TRUE;
+		(*nPass	:= 1;*)
+	END_IF
+
+	(* write block search data to Cnc *)
+	fDist := BlockSearch.fDistance * 10.0;
+	fbWriteType(nIdxGrp:=nIdxGrp, nIdxOffs:=16#49, nLen:=2, bStart:=rtStartWrite.Q, pDest:=ADR(BlockSearch.nType));
+	fbWriteCovDistance(nIdxGrp:=nIdxGrp, nIdxOffs:=16#4A, nLen:=8, bStart:=rtStartWrite.Q, pDest:=ADR(fDist));
+	fbWriteAutoReturn(nIdxGrp:=nIdxGrp, nIdxOffs:=16#4B, nLen:=1, bStart:=rtStartWrite.Q, pDest:=ADR(BlockSearch.bAutoReturn));
+	fbWriteDeviationMax(nIdxGrp:=nIdxGrp, nIdxOffs:=16#4C, nLen:=4, bStart:=rtStartWrite.Q, pDest:=ADR(BlockSearch.nDeviationMax));
+	fbWritePass(nIdxGrp:=nIdxGrp, nIdxOffs:=16#60, nLen:=4, bStart:=rtStartWrite.Q, pDest:=ADR(BlockSearch.nPass));
+
+	CASE BlockSearch.nType OF		(* count and number share a part of the memory *)
+		3:	fbWriteBlockCount(nIdxGrp:=nIdxGrp, nIdxOffs:=16#5E, nLen:=4, bStart:=rtStartWrite.Q, pDest:=ADR(BlockSearch.nBlockCount));
+		4:	fbWriteBlockNumber(nIdxGrp:=nIdxGrp, nIdxOffs:=16#5F, nLen:=4, bStart:=rtStartWrite.Q, pDest:=ADR(BlockSearch.nBlockNumber));
+	END_CASE
+
+	IF fbWriteType.Busy = FALSE
+		AND fbWriteCovDistance.BUSY = FALSE
+		AND fbWriteAutoReturn.BUSY = FALSE
+		AND fbWriteDeviationMax.BUSY = FALSE
+		AND fbWriteBlockNumber.BUSY = FALSE
+		AND fbWritePass.BUSY = FALSE
+		AND fbWriteBlockCount.BUSY = FALSE
+	THEN
+		Busy := FALSE;
+		bWriteStarted := FALSE;
+		blockSearchStart := TRUE;
+	END_IF
+END_IF
+
+
+(* Start block search *)
+(*
+IF (blockSearchStart) AND ((nType = 3) OR (nType = 4)) THEN
+	PLCMachineMode[nChan].Start := TRUE;
+END_IF
+*)
+
+(* -------------------------------- *)
+(* --- read block search states --- *)
+(* -------------------------------- *)
+
+rtStartRead(CLK:=bStartRead);
+(*rtStartRead(CLK:=Timer.Q);*)
+IF rtStartRead.Q THEN
+	bReadStarted := TRUE;
+END_IF
+
+IF bReadStarted THEN
+	Busy := TRUE;
+
+	fbReadType(nIdxGrp:=nIdxGrp, nIdxOffs:=16#61, nLen:=2, bStart:=rtStartRead.Q, pDest:=ADR(nActType));
+	fbReadCovDistance(nIdxGrp:=nIdxGrp, nIdxOffs:=16#62, nLen:=8, bStart:=rtStartRead.Q, pDest:=ADR(fActDistance));
+	fbReadAutoReturn(nIdxGrp:=nIdxGrp, nIdxOffs:=16#63, nLen:=1, bStart:=rtStartRead.Q, pDest:=ADR(bActAutoReturn));
+	fbReadDeviationMax(nIdxGrp:=nIdxGrp, nIdxOffs:=16#64, nLen:=4, bStart:=rtStartRead.Q, pDest:=ADR(nActDeviationMax));
+	CASE nActType OF			(* count and number cannot be read within a single cycle! *)
+		3: fbReadBlockCount(nIdxGrp:=nIdxGrp, nIdxOffs:=16#76, nLen:=4, bStart:=rtStartRead.Q, pDest:=ADR(nActBlockCount));
+		4: fbReadBlockNumber(nIdxGrp:=nIdxGrp, nIdxOffs:=16#77, nLen:=4, bStart:=rtStartRead.Q, pDest:=ADR(nActBlockNumber));
+	END_CASE;
+	fbReadPass(nIdxGrp:=nIdxGrp, nIdxOffs:=16#78, nLen:=4, bStart:=rtStartRead.Q, pDest:=ADR(nActPass));
+
+	(*
+	fbReadActBlockNumber(nIdxGrp:=nIdxGrp, bStart:=rtStartRead.Q, pDest:=ADR(actualBlockNumber));
+	fbReadActBlockCount(nIdxGrp:=nIdxGrp, bStart:=rtStartRead.Q, pDest:=ADR(actualBlockCount));
+	*)
+
+	IF fbReadType.Busy = FALSE
+		AND fbReadCovDistance.Busy = FALSE
+		AND fbReadAutoReturn.Busy = FALSE
+		AND fbReadDeviationMax.Busy = FALSE
+		AND fbReadBlockNumber.Busy = FALSE
+		AND fbReadPass.Busy = FALSE
+		AND fbReadActBlockNumber.Busy = FALSE
+		AND fbReadActBlockCount.Busy = FALSE
+	THEN
+		Busy := FALSE;
+
+		bReadStarted := FALSE;
+		bStartRead := FALSE; (* reset the HMI signal *)
+	END_IF
+END_IF
+
+
+(* Start a cyclic timer with period 100 ms *)
+timer1(IN := NOT(timer1.Q), PT := T#100MS);
+IF timer1.Q THEN
+	bStartReadAct := TRUE;
+END_IF
+
+IF bStartReadAct THEN
+	fbReadActBlockNumber(nIdxGrp:=nIdxGrp, nIdxOffs:=16#0E, nLen:=4, bStart:=TRUE, pDest:=ADR(actualBlockNumber));
+	fbReadActBlockCount(nIdxGrp:=nIdxGrp, nIdxOffs:=16#0D, nLen:=4, bStart:=TRUE, pDest:=ADR(actualBlockCount));
+	
+	IF fbReadActBlockNumber.Busy = FALSE
+		AND fbReadActBlockNumber.Busy = FALSE
+	THEN
+		bStartReadAct := FALSE;
+	END_IF
+END_IF
+
+
+(* just read actual covered distance *)
+coveredDistance := pChannel^.bahn_state.covered_distance_r;
+
+(* save all the information from the Cnc break *)
+channelMode := HLI_ChannelGetMode(nChan);
+IF (actualBlockCount <> 0) AND (channelMode = HLI_IMCM_AUTOMATIC_MODE) THEN
+	(* Information stayes after reset *)
+	actualBlockCount_AferReset := actualBlockCount;
+END_IF
+
+
+(*actualBlockNumber := pglAx[0]^.lr_state.block_nr_r;  asume first axis is always moved *)
+
+
+(* handshake during block search on/off *)
+pChannel^.bahn_lc_control.block_search.enable_w := TRUE;
+
+IF pChannel^.bahn_lc_control.block_search.command_r <>
+	pChannel^.bahn_lc_control.block_search.state_w THEN
+
+	(* acknowledge *)
+	pChannel^.bahn_lc_control.block_search.state_w := pChannel^.bahn_lc_control.block_search.command_r;
+
+(*
+	(* pup up of change *)
+	IF pChannel^.bahn_lc_control.block_search.state_w THEN
+		ADSLOGDINT( msgCtrlMask := ADSLOG_MSGTYPE_MSGBOX OR ADSLOG_MSGTYPE_LOG,
+						msgFmtStr := 'block search: %d', dintArg := 1);
+	ELSE
+		ADSLOGDINT( msgCtrlMask := ADSLOG_MSGTYPE_MSGBOX OR ADSLOG_MSGTYPE_LOG,
+						msgFmtStr := 'block search: %d', dintArg := 0);
+	END_IF
+*)
+END_IF
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

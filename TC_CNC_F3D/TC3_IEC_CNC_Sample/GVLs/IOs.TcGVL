@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <GVL Name="IOs" Id="{5ecb82ab-cff4-4d7f-8039-086ca7daf453}">
+    <Declaration><![CDATA[VAR_GLOBAL
+	IO_In1				AT %I*		: BOOL;
+	IO_In2				AT %I*		: BOOL;
+	IO_In3				AT %I*		: BOOL;
+	IO_In4				AT %I*		: BOOL;
+
+	IO_Out1				AT %Q*		: BOOL;
+	IO_Out2				AT %Q*		: BOOL;
+	IO_Out3				AT %Q*		: BOOL;
+	IO_Out4				AT %Q*		: BOOL;
+	
+	
+	//Definição dos inputs/outputs cartas de I/O
+	
+	IO_Out_Vent_cabl_X	AT %Q*		: BOOL;
+	IO_Out_Vent_Quadro1	AT %Q*		: BOOL;
+	IO_Out_Vent_Quadro2	AT %Q*		: BOOL;
+	IO_Out_HMI			AT %Q*		: BOOL;
+	IO_Out_Vent_Porta	AT %Q*		: BOOL;
+	IO_Out_Vent_Camara	AT %Q*		: BOOL;
+	IO_Out_Aque_Extrusor	AT %Q*		: BOOL;
+	IO_Out_Aque_Mesa	AT %Q*		: BOOL;
+	IO_Out_Chiller		AT %Q*		: BOOL;
+	A_Out_Aque_Ar		AT %Q*		: UINT;
+	
+	IO_In_X1			AT %I*		: BOOL;
+	IO_In_X2			AT %I*		: BOOL;
+	IO_In_B				AT %I*		: BOOL;
+	IO_In_Z1			AT %I*		: BOOL;
+	IO_In_Z2			AT %I*		: BOOL;
+	IO_In_Y				AT %I*		: BOOL;
+	IO_In_Capaci		AT %I*		: BOOL;
+	IO_In_Emergencia	AT %I*		: BOOL;
+	
+	//Inputs Temperatura
+	
+	Temp_Camara_in			AT %I*			: INT;						(*0.01ºC*)
+	Temp_Camara_in_status	AT %I*			: ARRAY [1..5] OF BOOL;		(*Underrange; Overrange; Error; TxPDO State; TxPDO Toggle*)
+	
+	Temp_Camara_out			AT %I*			: INT;						(*0.01ºC*)
+	Temp_Camara_out_status	AT %I*			: ARRAY [1..5] OF BOOL;		(*Underrange; Overrange; Error; TxPDO State; TxPDO Toggle*)
+	
+	Temp_Tabuleiro			AT %I*			: INT;						(*0.01ºC*)
+	Temp_Tabuleiro_status	AT %I*			: ARRAY [1..5] OF BOOL;		(*Underrange; Overrange; Error; TxPDO State; TxPDO Toggle*)
+	
+	Temp_Extrusor_1			AT %I*			: INT;						(*0.1ºC*)
+	Temp_Extrusor_1_status	AT %I*			: ARRAY [1..5] OF BOOL;		(*Underrange; Overrange; Error; TxPDO State; TxPDO Toggle*)
+	
+	Temp_Chiller			AT %I*			: INT;						(*0.1ºC*)
+	Temp_Chiller_status		AT %I*			: ARRAY [1..5] OF BOOL;		(*Underrange; Overrange; Error; TxPDO State; TxPDO Toggle*)
+	
+	Temp_Quadro				AT %I*			: INT;						(*0.1ºC*)
+	Temp_Quadro_status		AT %I*			: ARRAY [1..5] OF BOOL;		(*Underrange; Overrange; Error; TxPDO State; TxPDO Toggle*)
+	
+	Temp_Cabos				AT %I*			: INT;						(*0.1ºC*)
+	Temp_Cabos_status		AT %I*			: ARRAY [1..5] OF BOOL;		(*Underrange; Overrange; Error; TxPDO State; TxPDO Toggle*)
+	
+	Temp_8					AT %I*			: INT;						(*0.1ºC*)
+	Temp_8_status			AT %I*			: ARRAY [1..5] OF BOOL;		(*Underrange; Overrange; Error; TxPDO State; TxPDO Toggle*)
+	
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

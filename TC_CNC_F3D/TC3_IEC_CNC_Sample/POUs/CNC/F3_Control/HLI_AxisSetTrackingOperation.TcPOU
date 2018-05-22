@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4018.5">
+  <POU Name="HLI_AxisSetTrackingOperation" Id="{e50b2c90-aa03-49c6-ad5f-866395550728}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION HLI_AxisSetTrackingOperation : BOOL
+VAR_INPUT
+	nAxisNr				: UDINT;
+	bPLCAxisEnable    : BOOL;
+END_VAR
+VAR
+	nHliAxIdx			: UDINT;		(* Index of axis specific HLI area *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: HLI_AxisSetTrackingOperation                      *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(*   Author: TV                                              *)
+(*   Date: 21.12.2012                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+nHliAxIdx := nAxisNr - 1;
+
+IF nAxisNr < 1	OR gNrAx < nAxisNr	(* check for axis no *)
+	OR gpAx[nHliAxIdx] = 0 THEN		(* check for zero pointer *)
+	HLI_AxisSetTrackingOperation := FALSE;
+	RETURN; (* e x i t *)
+END_IF
+
+
+(* The axis is set to tracking operation (follow up) on or off, i.e. the control loop is opened.
+   The command position implicitly is set to the actual position. *)
+IF gpAx[nHliAxIdx]^.lr_state.axis_state_r = HLI_AXIS_ERROR OR NOT bPLCAxisEnable THEN
+	gpAx[nHliAxIdx]^.lr_mc_control.follow_up.command_w := TRUE;
+	HLI_AxisSetTrackingOperation := TRUE;
+ELSE
+	gpAx[nHliAxIdx]^.lr_mc_control.follow_up.command_w := FALSE;
+	HLI_AxisSetTrackingOperation := FALSE;
+END_IF
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

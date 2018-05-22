@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4018.5">
+  <POU Name="HLI_ChannelSetSyntaxCheck" Id="{ed27d5b3-fe09-4f77-bcef-67f59cab96b7}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION HLI_ChannelSetSyntaxCheck : bool
+VAR_INPUT
+	nChan					: UDINT;			(* Number of channel *)
+	nSyntaxCheck		: DINT;
+END_VAR
+VAR
+	nHliChIdx			: UdINT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: HLI_ChannelSetSyntaxCheck                         *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(* Author: MK                                                *)
+(*   Date: 21.12.2011                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+nHliChIdx := nChan - 1;
+
+IF nChan <= 0 OR gNrCh < nChan OR			(* check for channel no *)
+	gpCh[nHliChIdx] = 0 THEN					(* check for zero pointer *)
+	HLI_ChannelSetSyntaxCheck := FALSE;
+	RETURN; (* e x i t *)
+END_IF
+
+gpCh[nHliChIdx]^.decoder_mc_control.execution_mode.command_w  := nSyntaxCheck;
+
+HLI_ChannelSetSyntaxCheck := TRUE;
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

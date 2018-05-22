@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <POU Name="WritePersistentData" Id="{0671dada-0a50-42a3-a58d-acb723a27803}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM WritePersistentData
+VAR
+	bWriteData							: BOOL;
+	fbWritePersistentData			: FB_WritePersistentData;
+	rtWriteData							: R_TRIG;
+	bIsActive							: BOOL;
+
+	Busy									: BOOL;
+	ERR									: BOOL;
+	ERRID									: UDINT;
+	fbFlash1								: FB_Flash;
+	bGo									: BOOL := false;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+fbFlash1(tiTime_On := T#10MS, tiTime_Off := T#10MS);
+bWriteData := fbFlash1.bFlash and bGo;
+
+rtWriteData(CLK:=bWriteData);
+IF rtWriteData.Q THEN
+	bIsActive := TRUE;
+END_IF
+
+
+IF bIsActive THEN
+	fbWritePersistentData(NETID:='', PORT:=851, START:=bIsActive, TMOUT:=T#1s, MODE := SPDM_2PASS);
+	IF fbWritePersistentData.BUSY = FALSE THEN
+		fbWritePersistentData(START:=FALSE);
+		bIsActive := FALSE;
+	END_IF
+END_IF
+
+Busy := fbWritePersistentData.BUSY;
+ERR := fbWritePersistentData.ERR;
+ERRID := fbWritePersistentData.ERRID;
+]]></ST>
+    </Implementation>
+    <LineIds Name="WritePersistentData">
+      <LineId Id="37" Count="0" />
+      <LineId Id="4" Count="19" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

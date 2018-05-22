@@ -1,0 +1,15 @@
+﻿<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.20">
+  <DUT Name="ST_VEVariableConfig" Id="{884bb1a1-f254-4fb5-867c-d1054ba9fce9}">
+    <Declaration><![CDATA[TYPE ST_VEVariableConfig :
+STRUCT
+	VARIABLE_1		: POINTER TO ARRAY[0..3] OF DINT;
+	VARIABLE_2		: POINTER TO DINT;
+	VARIABLE_3		: POINTER TO BOOL;
+	VARIABLE_4		: POINTER TO DINT;
+	VARIABLE_5		: POINTER TO DINT;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+    <ObjectProperties />
+  </DUT>
+</TcPlcObject>

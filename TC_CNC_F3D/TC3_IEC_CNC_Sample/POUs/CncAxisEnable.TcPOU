@@ -1,0 +1,78 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <POU Name="CncAxisEnable" Id="{7413efca-bab7-40cc-bed2-f01454c872be}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM CncAxisEnable
+VAR_INPUT
+	bEnable					: BOOL;
+END_VAR
+VAR
+	bTorquePermission		: BOOL;
+	bFeedhold				: BOOL;
+	bDriveOn					: BOOL;
+
+	T_DriveOn				: TON;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    PRG: CncAxisEnable                                     *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(* Author: MK                                                *)
+(*   Date: 21.12.2011                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+(* Enable drive, order depends by type of drive and fieldbus *)
+T_DriveOn(IN:=bEnable, PT:=T#1S);
+IF bEnable THEN
+	bDriveOn			:= TRUE;
+	IF T_DriveOn.Q THEN
+		bTorquePermission	:= TRUE;
+		bFeedhold			:= TRUE;
+	END_IF
+ELSE
+	bTorquePermission	:= FALSE;
+	bFeedhold			:= FALSE;
+	bDriveOn				:= FALSE;
+END_IF
+
+(* Enable drive, order depends by type of drive and fieldbus *)
+(*
+T_DriveOn(IN:=bEnable, PT:=T#1s);
+IF bEnable THEN
+	bTorquePermission	:= TRUE;
+	bFeedhold			:= TRUE;
+	IF T_DriveOn.Q THEN
+		bDriveOn			:= TRUE;
+	END_IF
+ELSE
+	bTorquePermission	:= FALSE;
+	bFeedhold			:= FALSE;
+	bDriveOn				:= FALSE;
+END_IF
+*)
+
+
+(* Controller Enable, axis specific *)
+HLI_AxisSetFeedHold(Axis:=1, TorquePermission:=bTorquePermission, Feedhold:=bFeedhold, DriveOn:=bDriveOn);
+HLI_AxisSetFeedHold(Axis:=2, TorquePermission:=bTorquePermission, Feedhold:=bFeedhold, DriveOn:=bDriveOn);
+HLI_AxisSetFeedHold(Axis:=3, TorquePermission:=bTorquePermission, Feedhold:=bFeedhold, DriveOn:=bDriveOn);
+HLI_AxisSetFeedHold(Axis:=4, TorquePermission:=bTorquePermission, Feedhold:=bFeedhold, DriveOn:=bDriveOn);
+HLI_AxisSetFeedHold(Axis:=5, TorquePermission:=bTorquePermission, Feedhold:=bFeedhold, DriveOn:=bDriveOn);
+
+HLI_AxisSetFeedHold(Axis:=6, TorquePermission:=bTorquePermission, Feedhold:=bFeedhold, DriveOn:=bDriveOn);
+HLI_AxisSetFeedHold(Axis:=7, TorquePermission:=bTorquePermission, Feedhold:=bFeedhold, DriveOn:=bDriveOn);
+HLI_AxisSetFeedHold(Axis:=8, TorquePermission:=bTorquePermission, Feedhold:=bFeedhold, DriveOn:=bDriveOn);
+]]></ST>
+    </Implementation>
+    <LineIds Name="CncAxisEnable">
+      <LineId Id="3" Count="45" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="49" Count="1" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

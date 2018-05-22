@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.24">
+  <POU Name="CncRefPosOffs" Id="{31105125-b107-4bf8-a270-dd95a3f2aceb}">
+    <Declaration><![CDATA[PROGRAM CncRefPosOffs
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: CncRefPosOffs                                     *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(* Author: MK                                                *)
+(*   Date: 21.12.2011                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+gpAx[0]^.lr_mc_control.refpos_position.enable_w := TRUE;
+gpAx[1]^.lr_mc_control.refpos_position.enable_w := TRUE;
+gpAx[2]^.lr_mc_control.refpos_position.enable_w := TRUE;
+
+gpAx[0]^.lr_mc_control.set_reference_position.enable_w := TRUE;  
+gpAx[1]^.lr_mc_control.set_reference_position.enable_w := TRUE;  
+gpAx[2]^.lr_mc_control.set_reference_position.enable_w := TRUE;  
+
+
+
+gpAx[0]^.lr_mc_control.refpos_position.command_w := 100 * 10000;
+gpAx[1]^.lr_mc_control.refpos_position.command_w := 200 * 10000;
+gpAx[2]^.lr_mc_control.refpos_position.command_w := 300 * 10000;
+
+gpAx[0]^.lr_mc_control.set_reference_position.command_w := TRUE;  
+gpAx[1]^.lr_mc_control.set_reference_position.command_w := TRUE;  
+gpAx[2]^.lr_mc_control.set_reference_position.command_w := TRUE;  
+
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

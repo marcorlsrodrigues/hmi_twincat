@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <POU Name="Examples" Id="{f4beb52e-4b56-40f9-9273-be3f17b378a7}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Examples
+VAR
+	pAxis								: POINTER TO HIGH_LEVEL_INTERFACE_AX;
+	pChannel							: POINTER TO HIGH_LEVEL_INTERFACE_CH;
+	cmdValue							: DINT;
+	cmdRev							: DINT;
+
+(*
+	DevInfo							: ADSRDDEVINFO;
+	rdInfo							: BOOL;
+*)
+
+	fbFileOffset					: FB_ReadFileOffset;
+	start								: BOOL;
+	fileOffset						: DINT;
+
+	fbFileName						: FB_ReadFileName;
+	fileName							: STRING(255);
+	showMsg							: BOOL := TRUE;
+
+	fbPParamValue					: FB_ReadPParamValue;
+	startReadValue 				: BOOL;
+	pparamName						: STRING;
+	pparamValue						: LREAL;
+	
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(* shows how to get the data of the first axis *)
+pAxis := gpAx[0];
+
+(* shows how to get the data of the first channel *)
+pChannel := gpCh[0];
+
+(* External commanding of an axis *)
+pAxis^.lr_mc_control.add_cmd_values.command_w := cmdValue;
+
+(* Commanded revolution of the first (spindle) axis *)
+cmdRev := pAxis^.lr_state.cmd_rev_r;
+
+(* Reads the device info *)
+(*
+DevInfo(NETID:='', PORT:=10000, RDINFO:=rdInfo, TMOUT:=T#2s); 
+*)
+
+
+
+(* ----------------------------------------------
+	Shows how to read GEO task exceed counter
+   ---------------------------------------------- *)
+(*readGeoTaskExceedCounter(bStart:=bStartGTEC, pDest:=ADR(exCounter)); *)
+
+
+(* ----------------------------------------------
+	Shows how to read file offset and file name
+   ---------------------------------------------- *)
+(*fbFileOffset(nIdxGrp:=16#20100 + 1, bStart:=start, pDest:=ADR(fileOffset));
+fbFileName(nIdxGrp:=16#20100 + 1, bStart:=start, pDest:=ADR(fileName)); *)
+
+
+(* ----------------------------------------------
+	Shows how to read P-Parameter value
+   ---------------------------------------------- *)
+(* pparamName := 'P5'; *)
+(*
+IF startReadValue = TRUE THEN
+	fbPParamValue(
+				nIdxGrp := 16#22301,
+				bStart := startReadValue,
+				pSrc := ADR(pparamName),
+				pDest := ADR(pparamValue));
+	IF fbPParamValue.Busy = FALSE THEN
+		startReadValue := FALSE;
+	END_IF
+END_IF
+*)
+
+
+(* ----------------------------------------------
+	Shows how to read the current axis position
+   ---------------------------------------------- *)
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="Examples">
+      <LineId Id="3" Count="53" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

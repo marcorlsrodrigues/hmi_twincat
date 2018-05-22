@@ -1,0 +1,35 @@
+﻿<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.19">
+  <POU Name="DemoUpDown" Id="{99b245da-846f-4fb7-afa6-6222406d5dd7}">
+    <Declaration><![CDATA[PROGRAM DemoUpDown
+VAR
+	bGo				: BOOL;
+	UpDown			: INT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    PRG: DemoUpDown                                        *)
+(* --------------------------------------------------------- *)
+(*   Desc: Example, shows how to generate a up down signal   *)
+(* Author: MK                                                *)
+(*   Date: 21.12.2011                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+(* up down counter *)
+IF bGo THEN
+	UpDown := UpDown - 1;
+	IF UpDown < 1 THEN
+		bGo := FALSE;
+	END_IF
+ELSE
+	UpDown := UpDown + 1;
+	IF UpDown >= 100 THEN
+		bGo := TRUE;
+	END_IF
+END_IF
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,110 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <POU Name="HLI_ChannelModeAuto" Id="{3e9182a1-775e-4f58-aa4a-e0eef786107f}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION HLI_ChannelModeAuto : BOOL
+VAR_INPUT
+	nChan					: UDINT;			(* Number of channel *)
+	ProgramName 		: STRING(HLI_IMCM_MODE_STATE_PARAM_STRL);
+	pUnit					: POINTER TO MC_CONTROL_MCM_MODE_STATE_UNIT;
+	pCommand				: POINTER TO HLI_PROC_TRANS_TO_MODE_STATE;
+	pChannel				: POINTER TO ST_CncChannel;
+END_VAR
+VAR
+	pString				: POINTER TO STRING(HLI_IMCM_MODE_STATE_PARAM_STRL);
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: HLI_ChannelModeAuto                               *)
+(* --------------------------------------------------------- *)
+(*   Desc: switch channel to Automatic mode / xxx            *)
+(* Author: MK                                                *)
+(*   Date: 18.07.2002                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+IF pChannel^.State.Selected THEN
+	pChannel^.State.Selected := FALSE;
+	pCommand^.to_mode := HLI_IMCM_AUTOMATIC_MODE;
+	pCommand^.to_state := HLI_IMCM_PROCESS_SELECTED;
+	pCommand^.channel_number := nChan;
+	pString := ADR(pCommand^.parameter);
+	pString^ := ProgramName;
+	pUnit^.command_semaphor_rw := TRUE;
+	ADSLOG(strMsg:='Automatic selected', nDINT:=0, strArg := '');
+END_IF
+
+ 
+IF GVL.gvl_automaticselected THEN
+	pChannel^.State.Selected := FALSE;
+	pCommand^.to_mode := HLI_IMCM_AUTOMATIC_MODE;
+	pCommand^.to_state := HLI_IMCM_PROCESS_SELECTED;
+	pCommand^.channel_number := nChan;
+	pString := ADR(pCommand^.parameter);
+	pString^ := ProgramName;
+	pUnit^.command_semaphor_rw := TRUE;
+	ADSLOG(strMsg:='Automatic selected', nDINT:=0, strArg := '');
+END_IF
+
+
+IF pChannel^.State.Ready THEN
+	pChannel^.State.Ready := FALSE;
+	pCommand^.to_mode := HLI_IMCM_AUTOMATIC_MODE;
+	pCommand^.to_state := HLI_IMCM_PROCESS_READY;
+	pCommand^.channel_number := nChan;
+	pString := ADR(pCommand^.parameter);
+	pString^ := ProgramName;
+	pUnit^.command_semaphor_rw := TRUE;
+	ADSLOG(strMsg:='Automatic ready', nDINT:=0, strArg := '');
+END_IF
+
+IF pChannel^.State.Start THEN
+	pChannel^.State.Start := FALSE;
+	pCommand^.to_mode := HLI_IMCM_AUTOMATIC_MODE;
+	pCommand^.to_state := HLI_IMCM_PROCESS_ACTIVE;
+	pCommand^.channel_number := nChan;
+	pString := ADR(pCommand^.parameter);
+	pString^ := ProgramName;
+	pUnit^.command_semaphor_rw := TRUE;
+	ADSLOG(strMsg:='Programm %s started', nDINT:=0, strArg:=ProgramName);
+END_IF
+
+ //IF pChannel^.State.Stop THEN
+IF GVL.gvl_automaticstop THEN
+	pChannel^.State.Stop := FALSE;
+	pCommand^.to_mode := HLI_IMCM_AUTOMATIC_MODE;
+	pCommand^.to_state := HLI_IMCM_PROCESS_HOLD;
+	pCommand^.channel_number := nChan;
+	pUnit^.command_semaphor_rw := TRUE;
+	ADSLOG(strMsg:='Programm stopped', nDINT:=0, strArg := '');
+END_IF
+
+//IF pChannel^.State.Reset THEN
+IF GVL.gvl_automaticreset THEN
+	pChannel^.State.Reset := FALSE;
+	pCommand^.to_mode := HLI_IMCM_AUTOMATIC_MODE;
+	pCommand^.to_state := HLI_IMCM_PROCESS_DESELECTED;
+	pCommand^.channel_number := nChan;
+	pUnit^.command_semaphor_rw := TRUE;
+	ADSLOG(strMsg:='Automatic resetting', nDINT:=0, strArg := '');
+END_IF
+
+HLI_ChannelModeAuto := TRUE;
+]]></ST>
+    </Implementation>
+    <LineIds Name="HLI_ChannelModeAuto">
+      <LineId Id="3" Count="18" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="82" Count="9" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="22" Count="22" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="46" Count="7" />
+      <LineId Id="78" Count="1" />
+      <LineId Id="55" Count="9" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.38">
+  <DUT Name="ST_ToolData" Id="{3bc45e9f-dc77-4444-a66c-d10dd59a374f}">
+    <Declaration><![CDATA[TYPE ST_ToolData :		(* Tool data for a tool *)
+STRUCT
+(* -----------------------------------------
+	Hint:
+--------------------------------------------
+	Do not modify
+		- size or type of this struct
+
+	only modify
+		- name and comment of the tool parameters
+-------------------------------------------- *)
+
+		Nr							: INT;				(* Number of the tool *)
+		ToolType					: INT;				(* Type of the tool *)
+		SisterTool				: INT;				(* Sister tool number *)
+		ToolLocked				: INT;				(* Tool locked = 1, else = 0 *)
+		ParamInt1				: INT;				(* Free int parameter of the tool *)
+		ParamInt2				: INT;				(* Free int parameter of the tool *)
+		ParamInt3				: INT;				(* Free int parameter of the tool *)
+		ParamInt4				: INT;				(* Free int parameter of the tool *)
+
+		Length					: LREAL;				(* Length of the tool *)
+		Radius					: LREAL;				(* Radius of the tool *)
+		DeltaLength				: LREAL;				(* Oversize length of the tool *)
+		DeltaRadius				: LREAL;				(* Oversize radius of the tool *)
+		ToolLifeTime			: LREAL;				(* Tool Life Time *)
+		ToolLifeTimeMax		: LREAL;				(* Tool Life Time Max *)
+		ToolLifeDistance		: LREAL;				(* Tool Life Distance *)
+		ToolLifeDistanceMax	: LREAL;				(* Tool Life Distance Max *)
+		Param1					: LREAL;				(* Free parameter of the tool *)
+		Param2					: LREAL;				(* Free parameter of the tool *)
+		Param3					: LREAL;				(* Free parameter of the tool *)
+		Param4					: LREAL;				(* Free parameter of the tool *)
+		Param5					: LREAL;				(* Free parameter of the tool *)
+		Param6					: LREAL;				(* Free parameter of the tool *)
+		Param7					: LREAL;				(* Free parameter of the tool *)
+		Param8					: LREAL;				(* Free parameter of the tool *)
+		Param9					: LREAL;				(* Free parameter of the tool *)
+		Param10					: LREAL;				(* Free parameter of the tool *)
+		Param11					: LREAL;				(* Free parameter of the tool *)
+		Param12					: LREAL;				(* Free parameter of the tool *)
+		Param13					: LREAL;				(* Free parameter of the tool *)
+		Param14					: LREAL;				(* Free parameter of the tool *)
+		Param15					: LREAL;				(* Free parameter of the tool *)
+		Param16					: LREAL;				(* Free parameter of the tool *)
+		Param17					: LREAL;				(* Free parameter of the tool *)
+		Param18					: LREAL;				(* Free parameter of the tool *)
+		Param19					: LREAL;				(* Free parameter of the tool *)
+		Param20					: LREAL;				(* Free parameter of the tool *)
+		Param21					: LREAL;				(* Free parameter of the tool *)
+		Param22					: LREAL;				(* Free parameter of the tool *)
+		Param23					: LREAL;				(* Free parameter of the tool *)
+		Param24					: LREAL;				(* Free parameter of the tool *)
+		Param25					: LREAL;				(* Free parameter of the tool *)
+		Param26					: LREAL;				(* Free parameter of the tool *)
+		Param27					: LREAL;				(* Free parameter of the tool *)
+		Param28					: LREAL;				(* Free parameter of the tool *)
+		Param29					: LREAL;				(* Free parameter of the tool *)
+		Param30					: LREAL;				(* Free parameter of the tool *)
+		(*Name					: STRING;*)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

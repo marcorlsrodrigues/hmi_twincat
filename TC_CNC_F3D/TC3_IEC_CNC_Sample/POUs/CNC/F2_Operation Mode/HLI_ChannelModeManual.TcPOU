@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4018.5">
+  <POU Name="HLI_ChannelModeManual" Id="{1d083cc8-c05f-4655-80f2-5192664de2f3}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION HLI_ChannelModeManual : bool
+VAR_INPUT
+	nChan					: UDINT;			(* Number of channel *)
+	pUnit					: POINTER TO MC_CONTROL_MCM_MODE_STATE_UNIT;
+	pCommand				: POINTER TO HLI_PROC_TRANS_TO_MODE_STATE;
+	pChannel				: POINTER TO ST_CncChannel;
+END_VAR
+VAR
+	pString				: POINTER TO STRING;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: HLI_ChannelModeManual                             *)
+(* --------------------------------------------------------- *)
+(*   Desc: switch channel to Manual mode / xxx               *)
+(* Author: MK                                                *)
+(*   Date: 18.07.2002                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+IF pChannel^.State.Selected THEN
+	pChannel^.State.Selected := FALSE;
+	pCommand^.to_mode := HLI_IMCM_MANUAL_MODE;
+	pCommand^.to_state := HLI_IMCM_PROCESS_SELECTED;
+	pCommand^.channel_number := nChan;
+	pString := ADR(pCommand^.parameter);
+	pString^ := '';
+	pUnit^.command_semaphor_rw := TRUE;
+	ADSLOG(strMsg:='Manual Mode selected', nDINT:=0, strArg := '');
+END_IF
+
+IF pChannel^.State.Ready THEN
+	pChannel^.State.Ready := FALSE;
+	pCommand^.to_mode := HLI_IMCM_MANUAL_MODE;
+	pCommand^.to_state := HLI_IMCM_PROCESS_READY;
+	pCommand^.channel_number := nChan;
+	pString := ADR(pCommand^.parameter);
+	pString^ := '';
+	pUnit^.command_semaphor_rw := TRUE;
+	ADSLOG(strMsg:='Manual Mode ready', nDINT:=0, strArg := '');
+END_IF
+
+IF pChannel^.State.Start THEN
+	pChannel^.State.Start := FALSE;
+	pCommand^.to_mode := HLI_IMCM_MANUAL_MODE;
+	pCommand^.to_state := HLI_IMCM_PROCESS_ACTIVE;
+	pCommand^.channel_number := nChan;
+	pString := ADR(pCommand^.parameter);
+	pString^ := '';
+	pUnit^.command_semaphor_rw := TRUE;
+	ADSLOG(strMsg:='Manual Mode active', nDINT:=0, strArg := '');
+END_IF
+
+IF pChannel^.State.Stop THEN
+	pChannel^.State.Stop := FALSE;
+	pCommand^.to_mode := HLI_IMCM_MANUAL_MODE;
+	pCommand^.to_state := HLI_IMCM_PROCESS_HOLD;
+	pCommand^.channel_number := nChan;
+	pUnit^.command_semaphor_rw := TRUE;
+	ADSLOG(strMsg:='Manual Mode stopped', nDINT:=0, strArg := '');
+END_IF
+
+IF pChannel^.State.Reset THEN
+	pChannel^.State.Reset := FALSE;
+	pCommand^.to_mode := HLI_IMCM_MANUAL_MODE;
+	pCommand^.to_state := HLI_IMCM_PROCESS_DESELECTED;
+	pCommand^.channel_number := nChan;
+	pUnit^.command_semaphor_rw := TRUE;
+	ADSLOG(strMsg:='Manual Mode resetting', nDINT:=0, strArg := '');
+END_IF
+
+HLI_ChannelModeManual := TRUE;
+
+
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.6">
+  <POU Name="FB_AdsRead" Id="{0f2a6b75-e057-45c3-80c0-fe6600ca6383}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_AdsRead
+VAR_INPUT
+   sNetId               : T_AmsNetId;
+	nPort                : T_AmsPort;
+   nIdxGrp              : UDINT;
+   nIdxOffs             : UDINT;
+	nLen						: UDINT;
+   bStart               : BOOL;
+   pDest                : POINTER TO PVOID;
+END_VAR
+VAR_OUTPUT
+   bBusy                : BOOL;
+   bErr                 : BOOL;
+END_VAR
+VAR
+   fbRead               : ADSREAD;
+   bStarted             : BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*     FB: FB_AdsRead                                        *)
+(* --------------------------------------------------------- *)
+(*   Desc: Ads Read                                          *)
+(* Author: MK                                                *)
+(*   Date: 21.12.2011                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+IF bStart = TRUE AND bStarted = FALSE THEN
+	bStarted := TRUE;
+	bErr := FALSE;
+	bBusy := TRUE;
+END_IF
+
+IF bStarted THEN
+   fbRead(NetID:=sNetId, Port:=nPort, IdxGrp:=nIdxGrp, IdxOffs:=nIdxOffs,
+         LEN:=nLen, DestAddr:=pDest, READ:=bStarted, TMOUT:=T#3S);
+   IF NOT fbRead.Busy THEN
+      IF fbRead.Err THEN
+         bErr := TRUE;
+      END_IF
+      fbRead(READ := FALSE);
+      bStarted := FALSE;
+      bBusy := FALSE;
+   END_IF
+END_IF
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

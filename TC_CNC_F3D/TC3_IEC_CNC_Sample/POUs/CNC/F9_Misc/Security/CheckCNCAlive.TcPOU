@@ -1,0 +1,44 @@
+﻿<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.19">
+  <POU Name="CheckCNCAlive" Id="{21cb718a-6caa-400a-b25a-dd8e15b56fd6}">
+    <Declaration><![CDATA[FUNCTION CheckCncAlive : INT
+VAR_INPUT
+	nChan					: UINT;			(* Number of channel *)
+END_VAR
+VAR
+	nHliChIdx			: UINT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* The assumption is made that the cycle time of the PLC is at least twice as big as the CNC cycle time.
+
+The Cycle time of CNC is displayed in element:
+	gpCh[0]^.head.lc_watchdog.cycle_time_r
+
+remark: Take care if PLC cycle is smaller not to check CNC faster as possible !!!
+
+To simulate failure of CNC set cycle time of PLC smaller than CNC (Resource/task configuration).
+*)
+
+nHliChIdx := nChan - 1;
+
+IF nChan <= 0 OR gNrCh < nChan OR			(* check for channel no *)
+	gpCh[nHliChIdx] = 0 THEN					(* check for zero pointer *)
+	CheckCncAlive := -1;
+	RETURN; (* e x i t *)
+END_IF
+
+(* Copy current state of live sign to watchdog state *)
+gpCh[nHliChIdx]^.head.lc_watchdog.alive_state_w := gpCh[nHliChIdx]^.head.lc_watchdog.alive_rw;
+
+IF gpCh[nHliChIdx]^.head.lc_watchdog.alive_rw THEN
+	CheckCncAlive := 1;	(* CNC alive *)
+ELSE
+	CheckCncAlive := 0;	(* CNC not alive *)
+END_IF 
+
+(* reset live sign for next cycle *)
+gpCh[nHliChIdx]^.head.lc_watchdog.alive_rw	:= FALSE;
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

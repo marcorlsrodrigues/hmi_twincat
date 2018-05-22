@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.38">
+  <DUT Name="ST_ToolLife" Id="{83204511-4f95-437f-8ad6-10ff0171730d}">
+    <Declaration><![CDATA[TYPE ST_ToolLife :		(* Tool life data for a tool *)
+STRUCT
+	tool_id			: DINT;		(* Id of the tool *)
+	res				: DINT;
+	time_used		: LREAL;		(* Time of used tool in seconds *)
+	dist_used		: LREAL;		(* Distance of used tool in mm *)
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

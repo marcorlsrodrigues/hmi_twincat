@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4019.2">
+  <DUT Name="ST_CncSystem" Id="{6287f823-86de-4773-89c5-3bd9e3e0c286}">
+    <Declaration><![CDATA[TYPE ST_CncSystem :
+STRUCT
+	bHLIInit			: BOOL;		(* Initialization of HLI done *)
+	bUserInitDone	: BOOL;		(* Initialization of user data done *)
+	bInitError		: BOOL;		(* Error init HLI-Interfaces *)
+	nInitErrorId	: UDINT;		(* ErrorId during init HLI-Interfaces *)
+	Channel			: ARRAY[0..HLI_SYS_CH_MAX] OF ST_CncChannel;
+	Tool				: ARRAY[0..MAX_TOOLS] OF CNC_TOOL_DATA; (* for external tool configuration, see SysMan. channel, SDA Param, Externe Werkzeugverwaltung *)
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

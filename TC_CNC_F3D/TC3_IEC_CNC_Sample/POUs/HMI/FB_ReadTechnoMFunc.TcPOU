@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.6">
+  <POU Name="FB_ReadTechnoMFunc" Id="{01dce2cb-b362-4aa8-9239-f7cd0627b4b5}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ReadTechnoMFunc
+VAR_INPUT
+   sNetId               : T_AmsNetId;
+   nPort                : T_AmsPort := 553;
+   nIdxGrp              : UDINT;
+   nIdxOffs             : UDINT;
+	nLen						: UDINT;
+   bStart               : BOOL;
+	pStr						: POINTER TO STRING;
+END_VAR
+VAR_OUTPUT
+   bBusy                : BOOL;
+   bErr                 : BOOL;
+END_VAR
+VAR
+   fbRead               : ADSREAD;
+   bStarted             : BOOL;
+   destArr             : ARRAY[0..40] OF UDINT;
+	i							: UDINT;
+	nMax						: UDINT;
+	tmp						: STRING;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*     FB: FB_ReadTechnoMFunc                                *)
+(* --------------------------------------------------------- *)
+(*   Desc: Reads the technology information                  *)
+(*       : from the CNC                                      *)
+(* Author: MK                                                *)
+(*   Date: 21.12.2011                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+IF bStart = TRUE AND bStarted = FALSE THEN
+	bStarted := TRUE;
+	bErr := FALSE;
+	bBusy := TRUE;
+END_IF
+
+IF bStarted THEN
+   fbRead(NetID:=sNetId, Port:=nPort, IdxGrp:=nIdxGrp, IdxOffs:=nIdxOffs,
+         LEN:=nLen, DestAddr:=ADR(destArr), READ:=bStarted, TMOUT:=DEFAULT_ADS_TIMEOUT);
+   IF NOT fbRead.Busy THEN
+      IF fbRead.Err THEN
+         bErr := TRUE;
+		ELSE
+			tmp := '';
+			nMax := destArr[0];
+			FOR i:=1 TO nMax DO
+				IF destArr[i] <> -1 THEN
+					tmp := CONCAT(tmp, 'M');
+					tmp := CONCAT(tmp, UDINT_TO_STRING(destArr[i]));
+					tmp := CONCAT(tmp, ' ');
+		      END_IF
+			END_FOR
+			pStr^ := tmp;
+      END_IF
+      fbRead(READ := FALSE);
+      bStarted := FALSE;
+      bBusy := FALSE;
+   END_IF
+END_IF
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.6">
+  <POU Name="LRealToString" Id="{e9fdd927-8d9f-4dd5-86d6-691604fd9068}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION LRealToString : STRING
+VAR_INPUT
+	val					: LREAL;
+END_VAR
+VAR
+	v1						: INT;
+	v2						: INT;
+	valString			: STRING;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[v1 := LREAL_TO_INT(TRUNC(val));
+v2 := ABS(LREAL_TO_INT((val - v1)*1000));
+
+IF v1 = 0 AND val < 0 THEN
+	valString := '-0';
+ELSE
+	valString := INT_TO_STRING(v1);
+END_IF
+
+IF v2 >= 100 THEN
+	valString := CONCAT(str1 := valString, str2 := '.');
+ELSIF v2 >= 10 THEN
+	valString := CONCAT(str1 := valString, str2 := '.0');
+ELSE
+	valString := CONCAT(str1 := valString, str2 := '.00');
+END_IF
+
+valString := CONCAT(str1 := valString, str2 := INT_TO_STRING(v2));
+
+LRealToString := valString;
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

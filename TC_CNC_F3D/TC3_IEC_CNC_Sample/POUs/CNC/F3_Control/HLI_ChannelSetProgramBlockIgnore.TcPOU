@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4018.5">
+  <POU Name="HLI_ChannelSetProgramBlockIgnore" Id="{5e69f5dd-ee85-4908-a74d-0e387d936f88}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION HLI_ChannelSetProgramBlockIgnore : BOOL
+VAR_INPUT
+	nChan					: UDINT;			(* Number of channel *)
+	bPrgBlockIgnore	: BOOL;
+END_VAR
+VAR
+	nHliChIdx			: UDINT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: HLI_ChannelSetProgramBlockIgnore                  *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(* Author: MK                                                *)
+(*   Date: 21.12.2011                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+nHliChIdx := nChan - 1;
+
+IF nChan <= 0 OR gNrCh < nChan OR			(* check for channel no *)
+	gpCh[nHliChIdx] = 0 THEN					(* check for zero pointer *)
+	HLI_ChannelSetProgramBlockIgnore := 0;
+	RETURN; (* e x i t *)
+END_IF
+
+(* program block ignore *)
+// MK check
+gpCh[nHliChIdx]^.decoder_mc_control.program_block_ignore.command_w := BOOL_TO_UDINT(bPrgBlockIgnore);
+
+HLI_ChannelSetProgramBlockIgnore := TRUE;
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

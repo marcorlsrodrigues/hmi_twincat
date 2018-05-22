@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4018.5">
+  <POU Name="HLI_DoChannelTFunction" Id="{6688c1e5-e144-4b1c-a019-9e8e190756f5}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK HLI_DoChannelTFunction
+VAR_INPUT
+	nChan				: UDINT;		(* Channel number *)
+	nFuncNr			: UDINT;		(* Number of T-function *)
+END_VAR
+VAR_OUTPUT
+	bBusy				: BOOL;
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*     FB: HLI_DoChannelTFunction                            *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(* Author: MK                                                *)
+(*   Rev.: 1.1                                               *)
+(*   Date: 18.07.2002                                        *)
+(*       : 08.04.2005                                        *)
+(* ========================================================= *)
+
+
+bBusy := TRUE;
+
+CASE nChan OF
+	1:	(* cnc channel 1 -------------------------------------- *)
+		CASE nFuncNr OF
+			0:		bBusy := FALSE;
+			1:		bBusy := FALSE;
+			2:		bBusy := FALSE;
+			3:		bBusy := FALSE;
+
+			ELSE
+			ADSLOGDINT( msgCtrlMask := ADSLOG_MSGTYPE_MSGBOX OR
+													ADSLOG_MSGTYPE_LOG,
+								msgFmtStr := 'T-Funktion (%d), Channel 1, HLI_DoChannelTFunction() not implemented!',
+								dintArg := UDINT_TO_DINT(nFuncNr));
+				(* Quit the M-Function *)
+				bBusy := FALSE;
+		END_CASE;
+
+
+	2:	(* cnc channel 2 -------------------------------------- *)
+		CASE nFuncNr OF
+			0:		bBusy := FALSE;
+			1:		bBusy := FALSE;
+			2:		bBusy := FALSE;
+			3:		bBusy := FALSE;
+
+
+			ELSE
+				ADSLOGDINT( msgCtrlMask := ADSLOG_MSGTYPE_MSGBOX OR
+													ADSLOG_MSGTYPE_LOG,
+								msgFmtStr := 'T-Funktion (%d), Channel 2, HLI_DoChannelTFunction() not implemented!',
+								dintArg := UDINT_TO_DINT(nFuncNr));
+				(* Quit the M-Function *)
+				bBusy := FALSE;
+		END_CASE;
+
+ELSE
+	ADSLOGDINT( msgCtrlMask := ADSLOG_MSGTYPE_MSGBOX OR
+										ADSLOG_MSGTYPE_LOG,
+					msgFmtStr := 'Unknown channel number (%d) in HLI_DoChannelTFunction',
+					dintArg := UDINT_TO_DINT(nChan));
+	bBusy := FALSE;
+END_CASE;
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

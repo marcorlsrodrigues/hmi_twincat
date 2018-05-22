@@ -1,0 +1,39 @@
+﻿<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.19">
+  <DUT Name="ST_MachineMode" Id="{7aec2501-ffdf-4a43-91a5-834aa5450a07}">
+    <Declaration><![CDATA[TYPE ST_MachineMode :
+STRUCT
+	(*Mode				: ST_OpModes;	*)	(* Operation Mode *)
+	(*State				: ST_OpStates;*)	(* Operation States *)
+
+	(* Operation Mode *)
+	Standby			: BOOL;
+	Manual			: BOOL;
+	MDI				: BOOL;
+	Automatic		: BOOL;
+	Homing			: BOOL;
+
+	(* Operation State *)
+	Start				: BOOL;
+	Stop				: BOOL;
+	Reset				: BOOL;
+	Error				: BOOL;
+
+	(* Special functions *)
+	DoSingleBlock	: BOOL;
+	SingleBlock		: BOOL;
+   FeedHold			: BOOL;
+	Backward			: BOOL;
+	PrgBlockIgnore	: BOOL;
+	M01Stop			: BOOL;
+	BlockSearch		: ST_BlockSearch;
+	SyntaxCheck    : ST_SyntaxCheck;
+
+	(* Strings *)
+	ProgramName		: STRING(1024);
+	MDIString		: STRING(1024);
+END_STRUCT
+END_TYPE
+]]></Declaration>
+    <ObjectProperties />
+  </DUT>
+</TcPlcObject>

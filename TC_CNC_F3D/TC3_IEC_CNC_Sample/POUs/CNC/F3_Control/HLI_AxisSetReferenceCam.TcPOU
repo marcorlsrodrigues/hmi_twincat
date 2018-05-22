@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4018.5">
+  <POU Name="HLI_AxisSetReferenceCam" Id="{c81570fb-fc3f-4ffa-8eae-b32fd8f3c9a1}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION HLI_AxisSetReferenceCam : BOOL
+VAR_INPUT
+	Axis					: UDINT;
+	bReferenceCam		: BOOL;
+END_VAR
+VAR
+	nHliAxIdx			: UDINT;		(* Index of axis specific HLI area *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: HLI_AxisSetReferenceCam                           *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(* Author: MK                                                *)
+(*   Date: 21.12.2011                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+nHliAxIdx := Axis - 1;
+
+IF Axis < 1	OR gNrAx < Axis				(* check for axis no *)
+	OR gpAx[nHliAxIdx] = 0 THEN			(* check for zero pointer *)
+	HLI_AxisSetReferenceCam := FALSE;
+	RETURN; (* e x i t *)
+END_IF
+
+(* set reference cam *)
+gpAx[nHliAxIdx]^.lr_mc_control.reference_cam.command_w := bReferenceCam;
+
+HLI_AxisSetReferenceCam := TRUE;
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <POU Name="PTab_Out" Id="{97dc895a-311f-4097-8c38-c3fc67b0baaf}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM PTab_Out
+
+VAR_INPUT
+	fPwmInput								: FLOAT;	
+END_VAR
+
+VAR
+	bPwmOutBitPos							: BOOL;
+	bPwmOutBitNeg							: BOOL;
+
+	fbCTRL_PWM_OUT							: FB_CTRL_PWM_OUT;
+	stCTRL_PWM_OUT_PARAMS					: ST_CTRL_PWM_OUT_PARAMS;
+
+	eMode									: E_CTRL_MODE;
+	eErrorId								: E_CTRL_ERRORCODES;
+	bError									: BOOL;
+
+	bInit									: BOOL		:= TRUE;
+	fDelta									: FLOAT	:= 0.05;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF bInit
+THEN
+	(* Init parameter struct *)
+	stCTRL_PWM_OUT_PARAMS.tTaskCycleTime	:= T#10MS;
+	stCTRL_PWM_OUT_PARAMS.tPWMPeriod		:= T#200MS;
+
+	(* ACTIVE --> normal operation *)
+	eMode									:= eCTRL_MODE_ACTIVE;
+
+	(* Reset the init flag *)
+	bInit									:= FALSE;
+END_IF
+
+fbCTRL_PWM_OUT(		fPwmInput				:= fPwmInput,
+							eMode			:= eMode,
+							stParams		:= stCTRL_PWM_OUT_PARAMS,
+							
+							bPwmOutBitPos	=> bPwmOutBitPos,
+							bPwmOutBitNeg	=> bPwmOutBitNeg,
+							bError			=> bError,
+							eErrorId		=> eErrorId
+						);
+						
+	(* Output sign   *)
+IOS.IO_Out_Aque_Mesa:=bPwmOutBitPos;
+ ]]></ST>
+    </Implementation>
+    <LineIds Name="PTab_Out">
+      <LineId Id="20" Count="11" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="83" Count="11" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

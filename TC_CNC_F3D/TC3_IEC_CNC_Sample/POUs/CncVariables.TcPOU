@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.38">
+  <POU Name="CncVariables" Id="{a41e35af-cdf0-41d6-9cf7-07d96b9bdb49}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM CncVariables
+VAR_INPUT
+END_VAR
+VAR
+	VE						: ST_VEVariableConfig;
+	v1 : DINT;
+	v4 : DINT;
+	v5 : DINT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    PRG: CncVariables                                      *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(* Author: MK                                                *)
+(*   Date: 21.12.2011                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+
+(* External Variables in the CNC, must be set only at startup *)
+VE.VARIABLE_1 := LinkVEChannelStructure(nChan:=1, nVEIndex:=0, bGlobal:=TRUE);
+VE.VARIABLE_4 := LinkVEChannelStructure(nChan:=1, nVEIndex:=3, bGlobal:=TRUE);
+VE.VARIABLE_5 := LinkVEChannelStructure(nChan:=1, nVEIndex:=4, bGlobal:=TRUE);
+
+
+v1 := VE.VARIABLE_1^[0];
+v4 := VE.VARIABLE_4^;
+v5 := VE.VARIABLE_5^;
+
+(*
+VE.VARIABLE_1^[0] := 300;
+VE.VARIABLE_1^[1] := 1234;
+*)
+
+(*
+VE.VARIABLE_1^[0] := 100;
+VE.VARIABLE_1^[1] := 200;
+VE.VARIABLE_1^[2] := 300;
+VE.VARIABLE_1^[3] := 400;
+VE.VARIABLE_4^ := 500;
+*)
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

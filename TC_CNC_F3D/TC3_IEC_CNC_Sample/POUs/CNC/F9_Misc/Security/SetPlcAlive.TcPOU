@@ -1,0 +1,34 @@
+﻿<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.19">
+  <POU Name="SetPlcAlive" Id="{73bf61f1-0fc8-4c36-96a9-4611ed80cf6a}">
+    <Declaration><![CDATA[FUNCTION SetPlcAlive : BOOL
+VAR_INPUT
+	nChan					: UINT;			(* Number of channel *)
+END_VAR
+VAR
+	nHliChIdx			: UINT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*
+Display PLC is just alive (Trigger Watchdog to MC)
+If PLC is stopped here, alive sign is missing.
+-> CNC raises error message
+-> CNC stops movement with internal FEEDHOLD
+-> system has to be restarted (after removal of error)
+*)
+
+nHliChIdx := nChan - 1;
+
+IF nChan <= 0 OR gNrCh < nChan OR			(* check for channel no *)
+	gpCh[nHliChIdx] = 0 THEN					(* check for zero pointer *)
+	SetPlcAlive := FALSE;
+	RETURN; (* e x i t *)
+END_IF
+
+gpCh[nHliChIdx]^.head.mc_watchdog.alive_rw := TRUE;
+
+SetPLCAlive	:= TRUE;
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4018.5">
+  <POU Name="HLI_ChannelResetRequest" Id="{c9e73215-649b-4081-be27-81078deba9f3}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK HLI_ChannelResetRequest
+VAR_INPUT
+	nChan				: UDINT;		(* Channel number *)
+	bExec				: BOOL;
+END_VAR
+VAR_OUTPUT
+	bBusy				: BOOL;
+END_VAR
+VAR
+	nState			: UINT;
+	actualMode		: UDINT;
+	fbTON				: TON;
+	fbRtrigExec		: R_TRIG;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*     FB: HLI_ChannelResetRequest                           *)
+(* --------------------------------------------------------- *)
+(*   Desc: perform a reset in channel            				 *)
+(*   Author: MiB, TV, MK                                     *)
+(*   Date: 16.11.2006                                        *)
+(*   Last: 16.06.2010                                        *)
+(*   Rev.: 1.03                                              *)
+(* ========================================================= *)
+
+
+fbRtrigExec(clk := bExec);
+IF fbRtrigExec.Q THEN
+	bBusy := TRUE;
+	nState := 10;
+END_IF
+
+
+CASE nState OF
+	0:		(* IDLE *)
+		bBusy := FALSE;
+
+	10:	(* save actual opmode *)
+		actualMode := HLI_ChannelGetMode(nChan:=nChan);
+
+		(* switch to standby *)
+		PLCMachineMode[nChan].Standby := TRUE;
+		fbTON(IN:=FALSE);
+		nState := 30;
+
+	30:	(* wait for mode switch *)
+		fbTON(IN:= TRUE, PT:= t#1000ms);
+	 	IF HLI_ChannelGetMode(nChan:=nChan) = HLI_IMCM_STANDBY_MODE THEN
+			nState := 40;
+		END_IF
+		IF fbTON.Q THEN
+			(* Timeout Error -> go on with next step *)
+			nState := 40;
+		END_IF
+
+		IF nState = 40 THEN
+			(* switch back to previous mode *)
+			CASE actualMode OF
+				HLI_IMCM_STANDBY_MODE:		PLCMachineMode[nChan].Standby := TRUE;
+				HLI_IMCM_AUTOMATIC_MODE:	PLCMachineMode[nChan].Automatic:= TRUE;
+				HLI_IMCM_MDI_MODE:			PLCMachineMode[nChan].MDI:= TRUE;
+				HLI_IMCM_MANUAL_MODE:		PLCMachineMode[nChan].Manual:= TRUE;
+				HLI_IMCM_REFERENCE_MODE:	PLCMachineMode[nChan].Homing:= TRUE;
+			ELSE
+				PLCMachineMode[nChan].Standby := TRUE;
+			END_CASE
+			fbTON(IN:=FALSE);
+			nState := 50;
+		END_IF
+
+	50:	(* wait for mode switch *)
+		fbTON(IN:= TRUE, PT:= t#1000ms);
+	 	IF HLI_ChannelGetMode(nChan:=nChan) = actualMode THEN
+			bBusy := FALSE;
+			nState := 0;
+		END_IF
+		IF fbTON.Q THEN
+			(* Timeout Error -> go on with next step *)
+			bBusy := FALSE;
+			nState := 0;
+		END_IF
+END_CASE
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

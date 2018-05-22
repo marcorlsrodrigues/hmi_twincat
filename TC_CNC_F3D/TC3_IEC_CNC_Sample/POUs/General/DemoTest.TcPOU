@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <POU Name="DemoTest" Id="{5b9569da-3fa6-4428-8977-0f723fd5f6e7}" SpecialFunc="None">
+    <Declaration><![CDATA[
+PROGRAM DemoTest
+VAR_INPUT
+	bEnable					: BOOL := TRUE;
+END_VAR
+VAR
+	HandWheelEnc			: FB_HandWheelEnc;
+	incs						: UDINT;
+	dir						: INT;
+	testTOD					: TOD;
+	testDT					: DT;
+	testTime					: TIME;
+	testUInt32				: UDINT;
+	nColor					: UDINT := 16#5522AA;
+	stPosVector				: ST_PosVector;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF bEnable = TRUE THEN
+	PortalActValueLeft[3] := INT_TO_STRING(DemoUpDown.UpDown);
+	PortalActValueLeft[4] := INT_TO_STRING(DemoUpDown.UpDown);
+	PortalActValueLeft[5] := INT_TO_STRING(DemoUpDown.UpDown);
+END_IF
+
+
+IF dir = 0 THEN
+	;
+ELSIF dir = 1 THEN
+	incs := incs + 1;
+	
+	IF incs > 1024 THEN
+		incs := 0;
+	END_IF
+ELSIF dir = 2 THEN 
+	incs := incs - 1;
+
+	IF incs < 0 THEN
+		incs := 1024;
+	END_IF
+END_IF
+
+HandWheelEnc(EncoderValue:=incs);
+
+
+stPosVector.fPosX := CncHmiData.PlcHmiData.Channel[0].Axis[0].active_position_acs;
+stPosVector.fPosY := CncHmiData.PlcHmiData.Channel[0].Axis[1].active_position_acs;
+stPosVector.fPosZ := CncHmiData.PlcHmiData.Channel[0].Axis[2].active_position_acs;
+]]></ST>
+    </Implementation>
+    <LineIds Name="DemoTest">
+      <LineId Id="3" Count="24" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="48" Count="1" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

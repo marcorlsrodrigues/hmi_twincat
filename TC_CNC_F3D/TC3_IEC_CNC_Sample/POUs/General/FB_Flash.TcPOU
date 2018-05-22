@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.6">
+  <POU Name="FB_Flash" Id="{8b0f659f-4644-4067-9893-e48ee80d7681}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Flash
+VAR_INPUT
+	tiTime_On							: TIME := T#0.5S;		(* Zeitwert für Blinkbit ein *)
+	tiTime_Off							: TIME := T#0.5s;		(* Zeitwert für Blinkbit aus *)
+END_VAR
+VAR_OUTPUT
+	bFlash								: BOOL;					(* Blinkbit *)
+END_VAR
+VAR
+	tnTimer_ON							: TON;
+	tnTimer_OFF							: TON;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[tnTimer_OFF(IN:=tnTimer_ON.Q, PT:=tiTime_On);
+tnTimer_ON(IN:=NOT tnTimer_OFF.Q, PT:=tiTime_Off);
+bFlash := tnTimer_ON.Q;
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

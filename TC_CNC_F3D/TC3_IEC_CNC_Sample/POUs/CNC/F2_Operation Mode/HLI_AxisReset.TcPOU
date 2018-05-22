@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4018.5">
+  <POU Name="HLI_AxisReset" Id="{12b9d8aa-dd0b-40de-8963-75382cf1b707}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION HLI_AxisReset : bool
+VAR_INPUT
+	nChan				: UDINT;							(* Channel number *)
+	nAxisNr			: UDINT;							(* Axis number *)
+END_VAR
+VAR
+	nHliAxIdx		: UDINT;							(* Index of axis specific HLI area *)
+	pAxisData		: POINTER TO HIGH_LEVEL_INTERFACE_AX;	(* local pointer to data of actual axis *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: HLI_AxisReset                                     *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(* Author: MK                                                *)
+(*   Date: 21.12.2011                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+HLI_AxisReset := FALSE;
+nHliAxIdx := nAxisNr - 1;
+
+IF nAxisNr <= 0 OR gNrAx < nAxisNr		(* check for axis no *)
+	OR gpAx[nHliAxIdx] = 0 THEN			(* check for zero pointer *)
+	HLI_AxisReset := FALSE;
+	RETURN; (* e x i t *)
+END_IF
+
+
+(* get pointer to axis data *)
+pAxisData := gpAx[nHliAxIdx];
+IF pAxisData^.ipo_state.cnc_channel_r = nChan THEN (* it's an axis of the channel *)
+	(* is a reset commanded *)
+	IF pAxisData^.ipo_lc_control.plc_reset.command_r = TRUE THEN
+		(* quit this reset *)
+		pAxisData^.ipo_lc_control.plc_reset.state_w := TRUE;
+
+		ADSLOG2(strMsg:='Reset of axis: %d', nUDINT:=nAxisNr, strArg:='');
+
+		HLI_AxisReset := TRUE;
+	END_IF
+END_IF
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

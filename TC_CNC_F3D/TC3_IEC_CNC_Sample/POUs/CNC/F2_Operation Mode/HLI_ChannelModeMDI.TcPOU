@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4018.5">
+  <POU Name="HLI_ChannelModeMDI" Id="{73476843-bde2-4e16-ade7-818baca1846a}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION HLI_ChannelModeMDI : BOOL
+VAR_INPUT
+	nChan					: UDINT;							(* Number of channel *)
+	pMDIString 			: POINTER TO STRING(HLI_IMCM_MODE_STATE_PARAM_STRL);	(* pointer to the MDI program string *)
+	pUnit					: POINTER TO MC_CONTROL_MCM_MODE_STATE_UNIT;
+	pCommand				: POINTER TO HLI_PROC_TRANS_TO_MODE_STATE;
+	pChannel				: POINTER TO ST_CncChannel;
+END_VAR
+VAR
+	pString				: POINTER TO STRING(HLI_IMCM_MODE_STATE_PARAM_STRL);
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: HLI_ChannelModeMDI                                *)
+(* --------------------------------------------------------- *)
+(*   Desc: switch channel to MDI mode / xxx                  *)
+(* Author: MK                                                *)
+(*   Date: 18.07.2002                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+IF pChannel^.State.Selected THEN
+	pChannel^.State.Selected := FALSE;
+	pCommand^.to_mode := HLI_IMCM_MDI_MODE;
+	pCommand^.to_state := HLI_IMCM_PROCESS_SELECTED;
+	pCommand^.channel_number := nChan;
+	pMDIString := ADR(pCommand^.parameter);
+	pUnit^.command_semaphor_rw := TRUE;
+	ADSLOG(strMsg:='MDI Mode selected', nDINT:=0, strArg := '');
+END_IF
+
+IF pChannel^.State.Ready THEN
+	pChannel^.State.Ready := FALSE;
+	pCommand^.to_mode := HLI_IMCM_MDI_MODE;
+	pCommand^.to_state := HLI_IMCM_PROCESS_READY;
+	pCommand^.channel_number := nChan;
+	pMDIString := ADR(pCommand^.parameter);
+	pUnit^.command_semaphor_rw := TRUE;
+	ADSLOG(strMsg:='MDI Mode ready', nDINT:=0, strArg := '');
+END_IF
+
+IF pChannel^.State.Start THEN
+	pChannel^.State.Start := FALSE;
+	pCommand^.to_mode := HLI_IMCM_MDI_MODE;
+	pCommand^.to_state := HLI_IMCM_PROCESS_ACTIVE;
+	pCommand^.channel_number := nChan;
+	pString := ADR(pCommand^.parameter);
+	pString^ := pMDIString^;
+	pUnit^.command_semaphor_rw := TRUE;
+	ADSLOG(strMsg:='MDI %s started', nDINT:=0, strArg:=pMDIString^);
+END_IF
+
+IF pChannel^.State.Stop THEN
+	pChannel^.State.Stop := FALSE;
+	pCommand^.to_mode := HLI_IMCM_MDI_MODE;
+	pCommand^.to_state := HLI_IMCM_PROCESS_HOLD;
+	pCommand^.channel_number := nChan;
+	pUnit^.command_semaphor_rw := TRUE;
+	ADSLOG(strMsg:='MDI Mode stopped', nDINT:=0, strArg := '');
+END_IF
+
+IF pChannel^.State.Reset THEN
+	pChannel^.State.Reset := FALSE;
+	pCommand^.to_mode := HLI_IMCM_MDI_MODE;
+	pCommand^.to_state := HLI_IMCM_PROCESS_DESELECTED;
+	pCommand^.channel_number := nChan;
+	pUnit^.command_semaphor_rw := TRUE;
+	ADSLOG(strMsg:='MDI Mode resetting', nDINT:=0, strArg := '');
+END_IF
+
+HLI_ChannelModeMDI := TRUE;
+
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

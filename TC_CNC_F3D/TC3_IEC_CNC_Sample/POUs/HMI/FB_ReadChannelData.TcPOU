@@ -1,0 +1,233 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <POU Name="FB_ReadChannelData" Id="{49637210-a319-4439-9268-c97d39b16e8c}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ReadChannelData
+VAR_INPUT
+	nChIdx							: UDINT;
+	pHmiChannel						: POINTER TO ST_HmiChannel;
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+	pChannel							: POINTER TO HIGH_LEVEL_INTERFACE_CH;
+	pAx								: POINTER TO HIGH_LEVEL_INTERFACE_AX;
+
+	timerFileName					: TON;
+	sFileName						: STRING(255);
+	sFileNameOld					: STRING(255);
+	sTmp								: STRING(255);
+
+	nFileOffset						: DINT;
+	nFileOffsetOld					: DINT := -1;
+	
+	fbReadWriteData				: FB_ReadWriteFileData;
+	bReadFileErr					: BOOL;
+	bReadNcFile						: BOOL;
+	bReadFileActive				: BOOL;
+
+	timerTechno						: TON;
+	bReadTechnoInfoActive		: BOOL;	
+	fbReadTechnoGFunc				: FB_ReadTechnoGFunc;
+	fbReadTechnoMFunc				: FB_ReadTechnoMFunc;
+	fbReadTechnoTFunc				: FB_ReadTechnoTFunc;
+	
+	fbFlash							: FB_Flash;
+	nAxIdx							: INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: FB_ReadChannelData                                *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(* Author: MK                                                *)
+(*   Date: 01.12.2015                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+(* get pointer to channel data *)
+pChannel := gpCh[nChIdx];
+IF pChannel = 0 THEN
+	RETURN;
+END_IF
+
+(* commanded feedrade *)
+pHmiChannel^.CommandFeed := pChannel^.bahn_state.command_feed_r/1000.0*60.0;		(* mm/min *)
+
+(* active feedrade *)
+pHmiChannel^.ActiveFeed := pChannel^.bahn_state.active_feed_r/1000.0*60.0;			(* mm/min *)
+
+(* override *)
+pHmiChannel^.OverrideFeedrate := pChannel^.bahn_mc_control.override_feedrate.state_r/10.0;		(* % *)
+
+
+(* read file name and file offset *)
+timerFileName(IN := NOT(timerFileName.Q), PT := T#150MS);
+IF timerFileName.Q THEN
+	(*MRODRIGUES
+	sFileName := pChannel^.bahn_state.file_name_r.zeichen;*)
+	sFileName := GVL.gvl_sprogramname;
+	nFileOffset := pChannel^.bahn_state.active_fileoffset_r;
+	pHmiChannel^.NcFileName := sFileName;
+	pHmiChannel^.NcFileOffset := nFileOffset;
+
+	IF sFileNameOld <> sFileName OR nFileOffsetOld <> nFileOffset THEN
+		sFileNameOld := sFileName;
+		nFileOffsetOld := nFileOffset;
+		bReadNcFile := TRUE;
+	END_IF
+END_IF
+
+(* read nc file data *)
+IF (bReadNcFile = TRUE OR bReadFileActive = TRUE) THEN
+	IF sFileName = ''  
+		OR LEFT(STR:=sFileName, SIZE:=3) = 'C:\'
+	THEN
+		sTmp := sFileName;
+	ELSE
+		(* sub program, add default path *)
+		sTmp := CONCAT('c:\twincat\cnc\', sFileName);
+	END_IF
+	
+	fbReadWriteData(sNetId := '',
+							sPathName := sTmp,
+							nSeekPos := pHmiChannel^.NcFileOffset,
+							bExecute := bReadNcFile,
+							bWrite := FALSE,
+							pBuffer := ADR(pHmiChannel^.ActiveProgramBuffer),
+							nBufferSize := SIZEOF(pHmiChannel^.ActiveProgramBuffer)-1,
+							bError => bReadFileErr,
+							bBusy => bReadFileActive);
+	bReadNcFile := FALSE;
+
+	IF fbReadWriteData.bBusy = FALSE AND fbReadWriteData.bError = FALSE THEN
+		bReadFileErr := FALSE;
+	END_IF
+END_IF
+
+
+(* read technology information *)
+timerTechno(IN := NOT(timerTechno.Q), PT := T#500MS);
+IF timerTechno.Q THEN
+	bReadTechnoInfoActive := TRUE;
+END_IF
+
+IF bReadTechnoInfoActive THEN
+	fbReadTechnoGFunc(nIdxGrp	:= 16#20100 + 1 + nChIdx,
+							nIdxOffs	:= 16#03C,
+							nLen		:= 2*40,
+							bStart	:= timerTechno.Q,
+							pStr		:= ADR(pHmiChannel^.ActiveGFuncString));
+							
+	fbReadTechnoMFunc(nIdxGrp	:= 16#20100 + 1 + nChIdx,
+							nIdxOffs	:= 16#03D,
+							nLen		:= 4*40,
+							bStart	:= timerTechno.Q,
+							pStr		:= ADR(pHmiChannel^.ActiveMFuncString));
+
+	fbReadTechnoTFunc(nIdxGrp	:= 16#20100 + 1 + nChIdx,
+							nIdxOffs	:= 16#01A,
+							nLen		:= 4,
+							bStart	:= timerTechno.Q,
+							pStr		:= ADR(pHmiChannel^.ActiveTFuncString));
+							
+	IF fbReadTechnoGFunc.bBusy = FALSE
+		AND fbReadTechnoMFunc.bBusy = FALSE
+		AND fbReadTechnoTFunc.bBusy = FALSE
+	THEN
+		bReadTechnoInfoActive := FALSE;
+	END_IF
+END_IF
+
+
+(* channel mode and state *) 
+pHmiChannel^.Mode := CncSystem.Channel[nChIdx+1].ActModeString;
+pHmiChannel^.State := CncSystem.Channel[nChIdx+1].ActStateString;
+
+
+(* channel mode Automatic, Manual, MDI *)
+IF pHmiChannel^.SetModeAutomatic = TRUE THEN
+	PlcMachineMode[nChIdx+1].Automatic := pHmiChannel^.SetModeAutomatic;
+	pHmiChannel^.SetModeAutomatic := FALSE;
+	IF PlcMachineMode[nChIdx+1].ProgramName = '' THEN
+		PlcMachineMode[nChIdx+1].ProgramName := 'c:\TwinCAT\Cnc\Stadion.nc';
+	END_IF
+END_IF
+
+IF pHmiChannel^.SetModeManual = TRUE THEN
+	PlcMachineMode[nChIdx+1].Manual := pHmiChannel^.SetModeManual;
+	pHmiChannel^.SetModeManual := FALSE;
+END_IF
+
+IF pHmiChannel^.SetModeMDI = TRUE THEN
+	PlcMachineMode[nChIdx+1].MDI := pHmiChannel^.SetModeMDI;
+	pHmiChannel^.SetModeMDI := FALSE;
+END_IF
+
+(* Channel start, stop, reset *)
+IF pHmiChannel^.SetStart = TRUE THEN
+	PlcMachineMode[1].Start := pHmiChannel^.SetStart;
+	pHmiChannel^.SetStart := FALSE;
+END_IF
+
+IF pHmiChannel^.SetStop = TRUE THEN
+	PlcMachineMode[nChIdx+1].Stop := pHmiChannel^.SetStop;
+	pHmiChannel^.SetStop := FALSE;
+END_IF
+
+IF pHmiChannel^.SetReset = TRUE THEN
+	PlcMachineMode[nChIdx+1].Reset := pHmiChannel^.SetReset;
+	pHmiChannel^.SetReset := FALSE;
+END_IF
+
+
+(* Channel Error *) 
+fbFlash();
+
+IF HLI_ChannelGetState(nChan := nChIdx+1) = 6 THEN
+	pHmiChannel^.Error := TRUE;
+	
+	IF fbFlash.bFlash = TRUE THEN
+		pHmiChannel^.ErrorVis := 'Visible';
+	ELSE
+		pHmiChannel^.ErrorVis := 'Hidden';
+	END_IF
+ELSE
+	pHmiChannel^.Error := FALSE;
+	pHmiChannel^.ErrorVis := 'Hidden';
+END_IF
+
+
+(* axis data *)
+FOR nAxIdx := 0 TO 10 DO
+	IF	pChannel^.bahn_state.coord_r[nAxIdx].log_achs_nr_r = 0 THEN
+		CONTINUE;
+	END_IF
+
+	pHmiChannel^.AxisMax := nAxIdx + 1;
+	pHmiChannel^.Axis[nAxIdx].Name := pChannel^.bahn_state.coord_r[naxIdx].axis_name_r.zeichen;
+	
+	pAx := gpAx[naxIdx];
+	pHmiChannel^.Axis[nAxIdx].actCmdPosition := pAx^.ipo_state.s_act/10000.0;		(* mm *)
+	pHmiChannel^.Axis[nAxIdx].actVelo := pAx^.ipo_state.v_act/1000.0*60.0;			(* mm/min *) 
+	pHmiChannel^.Axis[nAxIdx].actAcc := pAx^.ipo_state.a_act/1000.0;					(*  *)
+	
+	pHmiChannel^.Axis[nAxIdx].current_position_acs := pAx^.lr_state.current_position_acs_r/10000.0;		(* mm *)
+	pHmiChannel^.Axis[nAxIdx].active_position_acs := pAx^.lr_state.active_position_acs_r/10000.0;		(* mm *)
+	pHmiChannel^.Axis[nAxIdx].end_position_acs := pAx^.lr_state.end_position_acs_r/10000.0;				(* mm *)
+	pHmiChannel^.Axis[nAxIdx].distanceToGo := pHmiChannel^.Axis[nAxIdx].end_position_acs - pHmiChannel^.Axis[nAxIdx].active_position_acs;						(* mm *)
+END_FOR
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ReadChannelData">
+      <LineId Id="3" Count="28" />
+      <LineId Id="219" Count="1" />
+      <LineId Id="32" Count="153" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

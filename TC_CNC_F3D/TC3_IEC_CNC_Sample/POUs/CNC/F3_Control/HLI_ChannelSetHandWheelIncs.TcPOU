@@ -1,0 +1,41 @@
+﻿<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.19">
+  <POU Name="HLI_ChannelSetHandWheelIncs" Id="{7c0a9097-90f4-461f-8649-5eec7a4ad6f3}">
+    <Declaration><![CDATA[FUNCTION HLI_ChannelSetHandWheelIncs : bool
+VAR_INPUT
+	nChan					: UINT;			(* Number of channel *)
+	nIncs					: DINT;			(* Number of increments *)
+	nHandWheel			: INT;			(* Number of the handwheel *)
+END_VAR
+VAR
+	nHliChIdx			: UINT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: HLI_ChannelSetHandWheelIncs                       *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(* Author: MK                                                *)
+(*   Date: 21.12.2011                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+nHliChIdx := nChan - 1;
+
+IF nChan <= 0 OR gNrCh < nChan OR			(* check for channel no *)
+	gpCh[nHliChIdx] = 0 THEN					(* check for zero pointer *)
+	HLI_ChannelSetHandWheelIncs := FALSE;
+	RETURN; (* e x i t *)
+END_IF
+
+// MK check
+// todo check for handwheel nr
+
+gpCh[nHliChIdx]^.hb_mc_control.handwheel_incs[nHandWheel].command_w := nIncs;
+
+HLI_ChannelSetHandWheelIncs := TRUE;
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

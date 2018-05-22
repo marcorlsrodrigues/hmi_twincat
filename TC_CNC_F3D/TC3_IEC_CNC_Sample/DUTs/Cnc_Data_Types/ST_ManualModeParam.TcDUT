@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4018.5">
+  <DUT Name="ST_ManualModeParam" Id="{e1d1f016-5eb0-4376-bf80-aa91b005b6f3}">
+    <Declaration><![CDATA[TYPE ST_ManualModeParam :
+STRUCT
+	(* manual mode parameter *)
+	nOpMode				: UINT;			(* operation mode, 0-no, 1-handwheel, 2-tip, 3-jog *)
+	nLogAxisNr			: UINT;			(* number of the logical axis *)
+	nControlElement	: UINT;			(* number of the logical control element *)
+	nHandwheelNr		: UINT;			(* number of handwheel 1..max)*)
+	nHandwheelIncs		: DINT;			(* number of handwheel increments *)
+	nHandwheelRes		: DINT;			(* resolution of the handwheel*)
+	nTipSpeed			: UDINT;			(* speed tip mode *)
+	nJogSpeed			: UDINT;			(* speed jog mode *)
+	nJogDistance		: UDINT;			(* jog distance *)
+	bKeyPos				: BOOL;			(* key press positive *)
+	bKeyNeg				: BOOL;			(* key press negative *)
+	bKeyRapid			: BOOL;			(* key press rapid *)
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

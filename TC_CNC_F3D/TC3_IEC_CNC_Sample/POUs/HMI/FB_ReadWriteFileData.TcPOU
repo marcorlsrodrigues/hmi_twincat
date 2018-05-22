@@ -1,0 +1,212 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.6">
+  <POU Name="FB_ReadWriteFileData" Id="{19fdcdaf-275e-49ae-91b7-53917313d62a}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ReadWriteFileData
+VAR_INPUT
+	sNetId						: T_AmsNetId;		(* TwinCAT network address of the file *)
+	sPathName					: T_MaxString;		(* File path and name *)
+	nSeekPos						: DINT;				(* New seek pointer position *)
+	bExecute						: BOOL;
+	bWrite						: BOOL;				(* TRUE => Write, FALSE => Read *)
+	tTimeOut						: TIME := DEFAULT_ADS_TIMEOUT;	(* Max. ADS timeout time *)
+	pBuffer						: POINTER TO BYTE;
+	nBufferSize					: UDINT;
+END_VAR
+VAR_OUTPUT
+	bBusy							: BOOL;				(* TRUE => execution in progress, FALSE => execution idle *)
+	bError						: BOOL;
+	nErrId						: UDINT;
+END_VAR
+VAR
+   nStep							: DWORD;
+	nModeTmp						: DWORD;
+	RisingEdge					: R_TRIG;
+	hFile							: UINT := 0;		(* file handle *)
+	fbFileOpen					: FB_FileOpen;
+	fbFileClose					: FB_FileClose;
+	fbFileRead					: FB_FileRead;
+	fbFileWrite					: FB_FileWrite;
+	fbFileSeek					: FB_FileSeek;
+	bStepReady					: BOOL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF sPathName = '' THEN
+	IF bWrite = FALSE THEN
+		pBuffer^ := 0;
+	END_IF
+	RisingEdge(CLK:=FALSE);
+	bBusy := FALSE;
+	bError := FALSE;
+	nErrId := 0;
+	RETURN;
+END_IF
+
+
+RisingEdge(CLK:=bExecute);
+
+CASE nStep OF
+	0:		(* idle *)
+		IF RisingEdge.Q THEN
+			bBusy := TRUE;
+			bError := FALSE;
+			nErrId := 0;
+			hFile := 0;
+			
+			IF bWrite = FALSE THEN
+				nModeTmp := FOPEN_MODEREAD OR FOPEN_MODEBINARY;
+			ELSE
+				nModeTmp := FOPEN_MODEWRITE OR FOPEN_MODEBINARY;
+			END_IF
+
+			(*--- open file ---*)
+			fbFileOpen(bExecute:=FALSE);
+			fbFileOpen(sNetId:=sNetId, sPathName:=sPathName,
+							nMode:=nModeTmp, ePath:=PATH_GENERIC,
+							tTimeout:=tTimeOut, bExecute:=TRUE);
+							
+			IF NOT fbFileOpen.bBusy THEN
+					bError := TRUE;
+				ELSE
+					bError := false;
+				END_IF
+							
+			IF nSeekPos <> 0 THEN
+				nStep := 10;
+			ELSE
+				nStep := 11;
+			END_IF
+		END_IF
+
+
+	10:	(*--- wait for open finished and seek ---*)
+		fbFileOpen(bExecute:=FALSE);
+		IF NOT fbFileOpen.bBusy THEN
+			IF fbFileOpen.bError THEN
+				nErrId := fbFileOpen.nErrId;
+				bError := TRUE;
+				nStep := 50;
+			ELSE
+				hFile := fbFileOpen.hFile;
+
+				(*--- seek file pointer ---*)
+				fbFileSeek(bExecute:=FALSE);
+				fbFileSeek(sNetId:=sNetId, hFile:=hFile,  
+								nSeekPos:=nSeekPos, eOrigin:=SEEK_SET,
+								bExecute:=TRUE, tTimeout:=tTimeOut);
+				nStep := 11;
+			END_IF
+		END_IF
+		
+
+	11:	(*--- wait for open/seek finished and read/write---*)
+		bStepReady := FALSE;
+		IF nSeekPos = 0 THEN
+			(*--- wait for open finished ---*)
+			fbFileOpen(bExecute:=FALSE);
+			IF NOT fbFileOpen.bBusy THEN
+				IF fbFileOpen.bError THEN
+					nErrId := fbFileOpen.nErrId;
+					bError := TRUE;
+					nStep := 50;
+				ELSE
+					hFile := fbFileOpen.hFile;
+					bStepReady := TRUE;
+				END_IF
+			END_IF
+		ELSE
+			(*--- wait for seek finished ---*)
+			fbFileSeek(bExecute:=FALSE);
+			IF NOT fbFileSeek.bBusy THEN
+				IF fbFileSeek.bError THEN
+					nErrId := fbFileSeek.nErrId;
+					bError := TRUE;
+					nStep := 50;
+				ELSE
+					bStepReady := TRUE;
+				END_IF
+			END_IF
+		END_IF
+		
+		IF bStepReady = TRUE THEN
+			IF bWrite = FALSE THEN
+				(*--- read data from file ---*)
+				MEMSET(pBuffer, 0, nBufferSize);
+				fbFileRead(bExecute:=FALSE);
+				fbFileRead(sNetId:=sNetId, hFile:=hFile,
+								pReadBuff:=pBuffer, cbReadLen:=nBufferSize,
+								bExecute:=TRUE, tTimeout:=tTimeOut);
+				nStep := 20;
+			ELSE
+				(*--- write data to file ---*)
+				fbFileWrite(bExecute:=FALSE);
+				fbFileWrite(sNetId:=sNetId, hFile:=hFile,
+								pWriteBuff:=pBuffer, cbWriteLen:=nBufferSize,
+								bExecute:=TRUE, tTimeout:=tTimeOut);
+				nStep := 21;
+			END_IF
+		END_IF
+
+
+	20:	(*--- wait for read finished and close---*)
+		fbFileRead(bExecute := FALSE);
+		IF NOT fbFileRead.bBusy THEN
+			IF fbFileRead.bError THEN
+				nErrId := fbFileRead.nErrId;
+				bError := TRUE;
+				nStep := 50;
+			ELSE
+				(*--- close the file ---*)
+				fbFileClose(bExecute:=FALSE);
+				fbFileClose(sNetId:=sNetId, hFile:=hFile, bExecute:=TRUE, tTimeout:=tTimeOut);
+				nStep := 30;
+			END_IF
+		END_IF
+
+
+	21:	(*--- wait for write finished and close ---*)
+		fbFileWrite(bExecute:=FALSE);
+		IF NOT fbFileWrite.bBusy THEN
+			IF fbFileWrite.bError THEN
+				nErrId := fbFileWrite.nErrId;
+				bError := TRUE;
+				nStep := 50;
+			ELSE
+				(*--- close the file ---*)
+				fbFileClose(bExecute:=FALSE);
+				fbFileClose(sNetId:=sNetId, hFile:=hFile, bExecute:=TRUE, tTimeout:=tTimeOut);
+				nStep := 30;
+			END_IF
+		END_IF
+
+
+	30:	(*--- wait for close finished ---*)
+		fbFileClose(bExecute:=FALSE);
+		IF NOT fbFileClose.bBusy THEN
+			IF fbFileClose.bError THEN
+				nErrId := fbFileClose.nErrId;
+				bError := TRUE;
+				nStep := 50;
+			ELSE
+				hFile := 0;
+				nStep := 0;			(* ready *)
+				bBusy := FALSE;
+			END_IF
+		END_IF
+
+	50:	(*--- Error ---*)
+		IF (hFile <> 0) THEN
+			(*--- try close the file ---*)
+			fbFileClose(bExecute:=FALSE);
+			fbFileClose(sNetId:=sNetId, hFile:=hFile, bExecute:=TRUE, tTimeout:=tTimeOut);
+			nStep := 30;		(* wait for close *)
+		ELSE
+			nStep := 0;			(* ready *)
+			bBusy := FALSE;
+		END_IF
+
+END_CASE
+
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

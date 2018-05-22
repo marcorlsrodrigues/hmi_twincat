@@ -1,0 +1,92 @@
+﻿<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.23">
+  <POU Name="ShowMessages" Id="{7a9cefc9-2a17-4484-8e27-932b66a34088}">
+    <Declaration><![CDATA[PROGRAM ShowMessages
+VAR
+	SimpleEventLog1		: FB_SimpleEventLog;
+	SimpleEventLog2		: FB_SimpleEventLog;
+	SimpleEventLog3		: FB_SimpleEventLog;
+	SimpleEventLog4		: FB_SimpleEventLog;
+
+	bStart					: BOOL;
+
+	bClear					: BOOL := TRUE;
+	ClearEvents				: ADSCLEAREVENTS;
+
+	bSetMsg1					: BOOL;
+	bSetMsg2					: BOOL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ----------------------------------------------------------
+	Clears all active and logged events at startup.
+	Should only be used at the startup sequence!
+	During PLC runtime cycle each event has to be handled with
+	set event, acknowledge event and or quit event!
+	Don't use ClearEvents in any other case!!!
+   ---------------------------------------------------------- *)
+IF bClear THEN
+  ClearEvents(NetID:='', bClear:=TRUE, iMode:=TCEVENTLOGIOFFS_CLEARALL, tTimeout:= t#1s);
+  bClear := FALSE;
+ELSE
+  ClearEvents(bClear:=FALSE);
+END_IF;
+
+
+(* ----------------------------------------------------------
+	Shows how to display messages.
+	At startup the different message lists are set up.
+	If new message lists are added, don't forget to restart again!
+
+	The different message classes are listed below.
+
+	TCEVENTCLASS_NONE				:=0,	 No class
+	TCEVENTCLASS_MAINTENANCE	:=1,	 Maintenance hint
+	TCEVENTCLASS_MESSAGE			:=2,	 Message
+	TCEVENTCLASS_HINT				:=3,	 Hint
+	TCEVENTCLASS_STATEINFO		:=4,	 State information
+	TCEVENTCLASS_INSTRUCTION	:=5,	 Instruction
+	TCEVENTCLASS_WARNING			:=6,	 Warning
+	TCEVENTCLASS_ALARM			:=7,	 Alarm
+	TCEVENTCLASS_PARAMERROR		:=8	 Parameter error
+   ---------------------------------------------------------- *)
+
+IF NOT bStart THEN
+	bStart := TRUE;
+	SimpleEventLog1(Init				:= TRUE,
+						SourceId			:= 50,
+						Class				:= TCEVENTCLASS_WARNING,
+						QuitRequired	:= FALSE,
+						adrAlarmArray	:= ADR(MSGList1),
+						adrQuitArray	:= ADR(MSGListQuit1));
+
+	SimpleEventLog2(Init				:= TRUE,
+						SourceId			:= 51,
+						Class				:= TCEVENTCLASS_ALARM,
+						QuitRequired	:= FALSE,
+						adrAlarmArray	:= ADR(MSGList2),
+						adrQuitArray	:= ADR(MSGListQuit2));
+
+	SimpleEventLog3(Init				:= TRUE,
+						SourceId			:= 52,
+						Class				:= TCEVENTCLASS_INSTRUCTION,
+						QuitRequired	:= FALSE,
+						adrAlarmArray	:= ADR(MSGList3),
+						adrQuitArray	:= ADR(MSGListQuit3));
+
+	SimpleEventLog4(Init				:= TRUE,
+						SourceId			:= 1000,
+						Class				:= TCEVENTCLASS_ALARM,
+						QuitRequired	:= FALSE,
+						adrAlarmArray	:= ADR(MSGList4),
+						adrQuitArray	:= ADR(MSGListQuit4));
+ELSE
+	SimpleEventLog1(Init:=FALSE);
+	SimpleEventLog2(Init:=FALSE);
+	SimpleEventLog3(Init:=FALSE);
+	SimpleEventLog4(Init:=FALSE);
+END_IF
+
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

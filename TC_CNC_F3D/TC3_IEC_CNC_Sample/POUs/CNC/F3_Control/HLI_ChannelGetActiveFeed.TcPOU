@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4018.5">
+  <POU Name="HLI_ChannelGetActiveFeed" Id="{81c9c2e0-50a9-45e9-9e96-ab68446a798b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION HLI_ChannelGetActiveFeed : LREAL
+VAR_INPUT
+	nChan					: UINT;			(* Number of channel *)
+END_VAR
+VAR
+	nHliChIdx			: UINT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: HLI_ChannelGetActiveFeed                          *)
+(* --------------------------------------------------------- *)
+(*   Desc: Active feed                                       *)
+(* Return: Active feed of the channel during interpolation   *)
+(* Author: MK                                                *)
+(*   Date: 30.11.2015                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+nHliChIdx := nChan - 1;
+
+IF nChan <= 0 OR gNrCh < nChan OR			(* check for channel no *)
+	gpCh[nHliChIdx] = 0 THEN					(* check for zero pointer *)
+	HLI_ChannelGetActiveFeed := 0.0;
+	RETURN; (* e x i t *)
+END_IF
+
+
+HLI_ChannelGetActiveFeed := DINT_TO_LREAL(gpCh[nHliChIdx]^.bahn_state.active_feed_r) * (60.0/1000000.0);
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

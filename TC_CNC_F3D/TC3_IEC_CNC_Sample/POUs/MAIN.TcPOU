@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <POU Name="MAIN" Id="{56a94792-f833-4bc1-a3f7-6ceccad4dcc0}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    PRG: TwinCAT CNC                                       *)
+(* --------------------------------------------------------- *)
+(*  Desc: Base PLC program for TwinCAT CNC                  *)
+(* 	Author: MK                                                *)
+(*  Date: 21.12.2011                                        *)
+(*  Cust.:                                                   *)
+(*  M-No:                                                   *)
+(*  Kom.:                                                   *)
+(*  Rev.: 1.3  from 1.24                                    *)
+(* ========================================================= *)
+
+DemoSine();
+DemoUpDown();
+DemoTest();
+WritePersistentData();
+ShowMessages();
+MySystemTime();
+
+HLI_Init();
+IF CncSystem.bHLIInit = TRUE THEN
+	CncPlcProgram();
+	CncMFunctions();
+	CncPlcManualFunctions();
+	CncPlcMessages();
+	CncRefPosOffs();
+	CncVariables();
+	CncHmiData();
+	
+	//gpAx[0]^.ipo_mc_control.emergency_stop.command_w :=1;
+	
+	//Axis1CurrPosition := gpAx[0]^.lr_state.current_position_acs_r/10000.0;
+	//Axis2CurrPosition := gpAx[0]^.lr_state.current_position_acs_r/10000.0;
+	//Axis3CurrPosition := gpAx[0]^.lr_state.current_position_acs_r/10000.0;
+	
+END_IF
+
+
+
+								(*--Belo Controlador--*)
+TController_Enable();
+								
+								(* -- Set das variáveis para a HMI -- *)
+SetHMIVariables();
+
+	
+]]></ST>
+    </Implementation>
+    <LineIds Name="MAIN">
+      <LineId Id="3" Count="9" />
+      <LineId Id="14" Count="6" />
+      <LineId Id="22" Count="9" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="47" Count="1" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="32" Count="1" />
+      <LineId Id="52" Count="2" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="113" Count="1" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

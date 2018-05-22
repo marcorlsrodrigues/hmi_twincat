@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.38">
+  <POU Name="LinkVEChannelStructure" Id="{0bbf35c0-2ce5-46ea-89ad-f4f2097dd2f5}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION LinkVEChannelStructure : POINTER TO DWORD
+VAR_INPUT
+	nChan				: INT;			(* Number of Channel 1...nChannel *)
+	nVEIndex			: DINT;			(* Index of variable  range 1...HLI_VE_VALUEMAX *)
+	bGlobal			: BOOL;			(* serves access to the global variable array *)
+END_VAR
+VAR
+	pVeData			: POINTER TO HLI_V_E_DATA := 0;
+	ptr      		: POINTER TO DWORD;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF nVEIndex >= 0 THEN
+	IF bGlobal = TRUE  THEN
+		(* global cnc variable data *)
+		pVeData := gpVEGlobal;
+	ELSE
+		(* channel specific cnc variable data *)
+		IF nChan <= 0 OR nChan < HLI_SYS_CH_MAXIDX THEN
+			RETURN;
+		END_IF
+		pVeData := gpVECh[nChan];
+	END_IF
+
+	IF pVeData <> 0 THEN
+		ptr := pVeData +  24 * nVEIndex;
+
+		LinkVEChannelStructure := ptr; (* successfully completed return *)
+	END_IF
+END_IF
+
+
+
+(*
+pLRealVal : POINTER TO LREAL;
+LRealVal : LREAL;
+VeOffset : DINT;
+VeOffset := (VarNr - 1) * (HLI_EXT_VAR_STR_MAXIDX + 1) / 4 + 1;
+pLRealVal := gpVEGlobal^.ext_var32[VeOffset]);
+LRealVal := pLRealVal^;
+*)
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

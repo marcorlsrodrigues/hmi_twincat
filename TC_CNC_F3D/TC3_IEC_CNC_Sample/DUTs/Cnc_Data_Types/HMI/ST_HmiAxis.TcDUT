@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.6">
+  <DUT Name="ST_HmiAxis" Id="{15a182fa-83fc-47b5-92cd-d174ac91ff52}">
+    <Declaration><![CDATA[TYPE ST_HmiAxis :
+STRUCT
+	Name								: STRING;
+	actCmdPosition					: LREAL;							(* mm *)
+	actVelo							: LREAL;							(* mm/min *)
+	actAcc							: LREAL;							(*  *)
+	// ----------------------------
+	current_position_acs			: LREAL;							(* mm *)
+	active_position_acs			: LREAL;							(* mm *)
+	end_position_acs				: LREAL;							(* mm *)
+	distanceToGo					: LREAL;							(* mm *)
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

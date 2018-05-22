@@ -1,0 +1,419 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <POU Name="HLI_AxisManualMode" Id="{4c2cdc46-9782-4192-8d9d-530f135e1996}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK HLI_AxisManualMode
+VAR_INPUT
+	nChan						: UDINT;			(* Number of channel *)
+	sProgramName 			: STRING(255);
+	bEndManual				: BOOL;
+	ManualModeParam		: ST_ManualModeParam;
+	nKeyUnitIdx				: INT := 0;
+	bManualModeHMI			: BOOL;			(* Manual Mode from HMI *)
+	bReset					: BOOL;
+	bG201						: BOOL;
+END_VAR
+VAR_OUTPUT
+	Busy						: BOOL;
+	IsActivated				: BOOL;
+	Err						: BOOL;
+	nErrorState				: INT;
+END_VAR
+VAR
+	nHliChIdx				: UDINT;
+	TONTimeOut				: TON;
+	nState					: INT := 1;
+	pString					: POINTER TO STRING;
+
+	pChannel					: POINTER TO HIGH_LEVEL_INTERFACE_CH;  		
+	pModeStateUnit			: POINTER TO MC_CONTROL_MCM_MODE_STATE_UNIT;
+	pModeStateUnitCmd		: POINTER TO HLI_PROC_TRANS_TO_MODE_STATE;
+	pMcControlHB			: POINTER TO MC_CONTROL_HB;
+	pActivation				: POINTER TO MC_CONTROL_HB_ACTIVATION_UNIT;
+	pKey						: POINTER TO MC_CONTROL_HB_KEY_UNIT;
+	pRapidKey				: POINTER TO MC_CONTROL_HB_RAPID_KEY_UNIT;
+
+	RTKeyRight				: R_TRIG;
+	FTKeyRight				: F_TRIG;
+	RTKeyLeft				: R_TRIG;
+	FTKeyLeft				: F_TRIG;
+
+	RTRapidKey				: R_TRIG;
+	FTRapidKey				: F_TRIG;
+
+	ManualModeParamOld	: ST_ManualModeParam;
+	i							: INT;
+	bDeselectFirst			: BOOL := TRUE;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*     FB: HLI_AxisManualMode                                *)
+(* --------------------------------------------------------- *)
+(*   Desc: Axis manual mode                                  *)
+(*   Author: MK                                              *)
+(*   Date: 18.07.2002                                        *)
+(*   Last: 08.04.2017                                        *)
+(*   Rev.: 2.18                                              *)
+(* ========================================================= *)
+
+isActivated := GVL.gvl_manualmode_isactivated;
+Busy := GVL.gvl_manualmode_busy;
+nHliChIdx := nChan - 1;
+
+IF bManualModeHMI THEN
+	Busy := FALSE;
+	RETURN; (* e x i t *)
+END_IF
+
+IF bEndManual AND Busy = FALSE THEN
+	RETURN; (* e x i t *)
+END_IF
+
+IF nChan <= 0 OR nChan > gNrCh			(* check for channel no *)
+	OR gpCh[nHliChIdx] = 0					(* check for zero pointer *)
+THEN
+	Busy := FALSE;
+	RETURN; (* e x i t *)
+END_IF
+
+Busy := TRUE;
+
+IF bReset THEN
+	nState := 1;
+	nErrorState := 0;
+	Err := FALSE;
+END_IF
+
+
+(* setup pointers used *)
+pChannel := gpCh[nHliChIdx];
+pMcControlHB := ADR(pChannel^.hb_mc_control);
+pRapidKey := ADR(pMcControlHB^.rapid_key);
+pKey := ADR(pMcControlHB^.key[nKeyUnitIdx]);
+
+
+(* clear requests from HMI *)
+IF pKey^.request_semaphor_rw THEN
+	pKey^.request_semaphor_rw := FALSE;
+END_IF
+
+IF pMcControlHB^.activation.request_semaphor_rw THEN
+	pMcControlHB^.activation.request_semaphor_rw := FALSE;
+END_IF
+
+IF pMcControlHB^.tip_parameter.request_semaphor_rw THEN
+	pMcControlHB^.tip_parameter.request_semaphor_rw := FALSE;
+END_IF
+
+IF pMcControlHB^.jog_parameter.request_semaphor_rw THEN
+	pMcControlHB^.jog_parameter.request_semaphor_rw := FALSE;
+END_IF
+
+
+CASE nState OF
+	1: (* switch to manual mode *)
+		IsActivated := FALSE;
+
+		(* enable control unit for manual mode operation *)
+		IF bManualModeHMI THEN
+			pKey^.enable_w := FALSE;
+			pMcControlHB^.activation.enable_w := FALSE;
+		ELSE
+			pKey^.enable_w := TRUE;
+			pMcControlHB^.activation.enable_w := TRUE;
+		END_IF
+
+		(* enable control unit for rapid key movement *)
+		pRapidKey^.enable_w := TRUE;
+		
+		(* set up pointer *)
+		pModeStateUnit := ADR(pChannel^.channel_mc_control.mode_and_state);
+		pModeStateUnitCmd := ADR(pModeStateUnit^.command_w);
+
+		ManualModeParamOld.nOpMode := ManualModeParam.nOpMode;
+		ManualModeParamOld.nTipSpeed := ManualModeParam.nTipSpeed;
+		ManualModeParamOld.nJogSpeed := ManualModeParam.nJogSpeed;
+		ManualModeParamOld.nHandwheelRes := ManualModeParam.nHandwheelRes;
+		ManualModeParamOld.nJogDistance := ManualModeParam.nJogDistance;
+
+		(* Copy Program name *)
+		pString := ADR(pModeStateUnitCmd^.parameter);
+		pString^ := sProgramName;
+
+		(* if manual mode is not active, try to activate *)
+		(*
+		pModeStateUnitCmd^.to_mode := HLI_IMCM_MANUAL_MODE;
+		pModeStateUnitCmd^.to_state := HLI_IMCM_PROCESS_ACTIVE; (* HLI_IMCM_PROCESS_SELECTED *)
+		pModeStateUnitCmd^.channel_number := nChan;
+		pModeStateUnit^.command_semaphor_rw := TRUE;
+		*)
+		
+		TONTimeOut(IN:=FALSE);
+		nErrorState := 0;
+		Err := FALSE;
+		nState := 11;
+
+		(* axis manual in CNC interpolation mode G201 *)
+		IF bG201 = TRUE THEN
+			nState := 3;
+		END_IF
+
+
+	11: (* wait for mode switch *)
+		TONTimeOut(IN:=TRUE, PT:=T#2S);
+		IF pModeStateUnit^.state_r.mode = HLI_IMCM_MANUAL_MODE AND
+			pModeStateUnit^.state_r.state = HLI_IMCM_PROCESS_ACTIVE THEN	(* HLI_IMCM_PROCESS_SELECTED *)
+			TONTimeOut(IN:=FALSE);
+			IF bManualModeHMI THEN
+				nState := 1;
+				Busy := FALSE;
+			ELSE
+				nState := 2;
+			END_IF
+		END_IF
+
+		(* error timeout *)
+		IF TONTimeOut.Q = TRUE THEN
+			Err := TRUE;
+			nErrorState := nState;
+			nState := 99;
+		END_IF
+
+
+	2: (* check for deselecting axis first *)
+		IF bDeselectFirst = TRUE AND nKeyUnitIdx = 0 THEN
+			bDeselectFirst := FALSE;
+			ManualModeParamOld.nLogAxisNr := ManualModeParam.nLogAxisNr;
+			
+			FOR i := 0 TO HLI_CH_AX_MAXIDX DO
+				IF pChannel^.bahn_state.coord_r[i].hb_display_r.operation_mode <> 0 THEN
+					ManualModeParamOld.nLogAxisNr	:= pChannel^.bahn_state.coord_r[i].log_achs_nr_r;
+					EXIT;
+				END_IF
+			END_FOR
+		END_IF
+
+		nState := 3;
+
+		
+	3: (* parametrize *)
+		IF ManualModeParam.nOpMode = HLI_HB_MODE_HR THEN		(* 1 - handwheel *)
+			pMcControlHB^.handwheel_incs[ManualModeParam.nHandwheelNr].command_w := ManualModeParam.nHandwheelIncs;
+			pMcControlHB^.handwheel_incs[ManualModeParam.nHandwheelNr].enable_w := TRUE;
+			pMcControlHB^.hr_parameter.enable_w := TRUE;
+			pMcControlHB^.hr_parameter.command_w.log_achs_nr := ManualModeParam.nLogAxisNr;
+			pMcControlHB^.hr_parameter.command_w.resolution := ManualModeParam.nHandwheelRes;
+			pMcControlHB^.hr_parameter.command_semaphor_rw := TRUE;
+		(*ELSIF ManualModeParam.nOpMode = HLI_HB_MODE_TIP THEN	*)(* 2 - tip mode (continuous) *) (*MRODRIGUES*)
+		ELSIF ManualModeParam.nOpMode = GVL.gvl_Manual_nOpMode THEN
+			pMcControlHB^.tip_parameter.enable_w := TRUE;
+			pMcControlHB^.tip_parameter.command_w.log_achs_nr := ManualModeParam.nLogAxisNr;
+			pMcControlHB^.tip_parameter.command_w.speed := ManualModeParam.nTipSpeed * 1000/60;
+			pMcControlHB^.tip_parameter.command_semaphor_rw := TRUE;
+		ELSIF ManualModeParam.nOpMode = HLI_HB_MODE_JOG THEN 	(* 3 - jog mode (incremental)*)
+			pMcControlHB^.jog_parameter.enable_w := TRUE;
+			pMcControlHB^.jog_parameter.command_w.log_achs_nr := ManualModeParam.nLogAxisNr;
+			pMcControlHB^.jog_parameter.command_w.speed := ManualModeParam.nJogSpeed * 1000/60;
+			pMcControlHB^.jog_parameter.command_w.distance := ManualModeParam.nJogDistance;
+			pMcControlHB^.jog_parameter.command_semaphor_rw := TRUE;
+		END_IF
+
+		TONTimeOut(IN:=FALSE);
+		nState := 31;
+
+	31: (* waiting for acknowledgement *)
+		TONTimeOut(IN:=TRUE, PT:=T#200S);
+		IF ManualModeParam.nOpMode = HLI_HB_MODE_HR THEN		(* 1 - handwheel *)
+			IF pMcControlHB^.hr_parameter.command_semaphor_rw = FALSE THEN
+				TONTimeOut(IN:=FALSE);
+				nState := 4;
+			END_IF
+		(*ELSIF ManualModeParam.nOpMode = HLI_HB_MODE_TIP THEN	*)(* 2 - tip mode (continuous) *) (*MRODRIGUES*)
+		ELSIF ManualModeParam.nOpMode = GVL.gvl_Manual_nOpMode THEN
+			IF pMcControlHB^.tip_parameter.command_semaphor_rw = FALSE THEN
+				TONTimeOut(IN:=FALSE);
+				nState := 4;
+			END_IF
+		ELSIF ManualModeParam.nOpMode = HLI_HB_MODE_JOG THEN 	(* 3 - jog mode (incremental)*)
+			IF pMcControlHB^.jog_parameter.command_semaphor_rw = FALSE THEN
+				TONTimeOut(IN:=FALSE);
+				nState := 4;
+			END_IF
+		END_IF
+
+		(* error timeout *)
+		IF TONTimeOut.Q = TRUE THEN
+			Err := TRUE;
+			nErrorState := nState;
+			nState := 99;
+		END_IF
+
+
+	4: (* activate manual operation mode for the selected axis *)
+		pActivation := ADR(pMcControlHB^.activation);
+		pActivation^.command_w.log_achs_nr := ManualModeParam.nLogAxisNr;
+		pActivation^.command_w.control_element := ManualModeParam.nControlElement;
+		pActivation^.command_w.operation_mode := ManualModeParam.nOpMode;
+		pActivation^.command_semaphor_rw := TRUE;
+		nState := 41;
+
+	41: (* waiting for acknowledgement *)
+		TONTimeOut(IN:=TRUE, PT:=T#2S);
+		IF pActivation^.command_semaphor_rw = FALSE THEN
+			TONTimeOut(IN:=FALSE);
+			nState := 7;
+		END_IF
+
+		(* error timeout *)
+		IF TONTimeOut.Q = TRUE THEN
+			Err := TRUE;
+			nErrorState := nState;
+			nState := 99;
+		END_IF
+
+
+	7: (* finally manual mode *)
+		IsActivated := TRUE;
+		
+		(* handwheel *)
+		IF ManualModeParam.nOpMode = HLI_HB_MODE_HR THEN
+			pMcControlHB^.handwheel_incs[ManualModeParam.nHandwheelNr].command_w := ManualModeParam.nHandwheelIncs;
+		END_IF
+
+		
+		(* edge detection rapid traverse speed mode *)
+		IF pRapidKey^.command_semaphor_rw = FALSE THEN
+			RTRapidKey(CLK := ManualModeParam.bKeyRapid);
+			FTRapidKey(CLK := ManualModeParam.bKeyRapid);
+		END_IF
+
+		(* rapid traverse speed mode selected *)
+		IF RTRapidKey.Q THEN
+			pRapidKey^.command_w.key_pressed := 1;
+			pRapidKey^.command_w.log_key_nr := ManualModeParam.nControlElement;
+			pRapidKey^.command_semaphor_rw := TRUE;
+		END_IF
+
+		(* rapid traverse speed mode deselected *)
+		IF FTRapidKey.Q THEN
+			pRapidKey^.command_w.key_pressed := 0;
+			pRapidKey^.command_w.log_key_nr := ManualModeParam.nControlElement;
+			pRapidKey^.command_semaphor_rw := TRUE;
+		END_IF
+
+		
+		(* edge detection *)
+		IF pKey^.command_semaphor_rw = FALSE THEN
+			RTKeyRight(CLK := ManualModeParam.bKeyPos AND NOT ManualModeParam.bKeyNeg);
+			FTKeyRight(CLK := ManualModeParam.bKeyPos AND NOT ManualModeParam.bKeyNeg);
+			RTKeyLeft(CLK := NOT ManualModeParam.bKeyPos AND ManualModeParam.bKeyNeg);
+			FTKeyLeft(CLK := NOT ManualModeParam.bKeyPos AND ManualModeParam.bKeyNeg);
+		END_IF
+
+		(* right key pressed *)
+		IF RTKeyRight.Q = TRUE THEN
+			pKey^.command_w.log_key_nr := ManualModeParam.nControlElement;
+			pKey^.command_w.direction := HLI_KEY_DIR_POS;
+			pKey^.command_semaphor_rw := TRUE;
+		END_IF
+
+		(* left key pressed *)
+		IF RTKeyLeft.Q = TRUE THEN
+			pKey^.command_w.log_key_nr := ManualModeParam.nControlElement;
+			pKey^.command_w.direction := HLI_KEY_DIR_NEG;
+			pKey^.command_semaphor_rw := TRUE;
+		END_IF
+
+		(* left or right key released *)
+		IF FTKeyRight.Q = TRUE OR FTKeyLeft.Q = TRUE THEN
+			pKey^.command_w.log_key_nr := ManualModeParam.nControlElement;
+			pKey^.command_w.direction := HLI_KEY_DIR_NONE;
+			pKey^.command_semaphor_rw := TRUE;
+		END_IF
+
+		
+		(* end of manual mode or parametrization changed *)
+		IF pKey^.command_semaphor_rw = FALSE THEN
+			IF (bEndManual = TRUE)
+				OR (ManualModeParam.nLogAxisNr <> ManualModeParamOld.nLogAxisNr)
+				OR (ManualModeParam.nJogDistance <> ManualModeParamOld.nJogDistance)
+				OR (ManualModeParam.nOpMode <> ManualModeParamOld.nOpMode)
+				OR (ManualModeParam.nTipSpeed <> ManualModeParamOld.nTipSpeed)
+				OR (ManualModeParam.nJogSpeed <> ManualModeParamOld.nJogSpeed)
+				OR (ManualModeParam.nHandwheelRes <> ManualModeParamOld.nHandwheelRes)
+			THEN
+				pKey^.command_w.log_key_nr := ManualModeParam.nControlElement;
+				pKey^.command_w.direction := HLI_KEY_DIR_NONE;
+				pKey^.command_semaphor_rw := TRUE;
+				
+				pActivation^.command_w.log_achs_nr := ManualModeParamOld.nLogAxisNr;
+				pActivation^.command_w.control_element := ManualModeParam.nControlElement;
+				pActivation^.command_w.operation_mode := UDINT_TO_UINT(HLI_HB_MODE_NONE);
+				pActivation^.command_semaphor_rw := TRUE;
+
+				(* switch off key control unit for handwheel movement *)
+				pMcControlHB^.handwheel_incs[ManualModeParam.nHandwheelNr].enable_w := FALSE;
+
+				TONTimeOut(IN:=FALSE);
+				IsActivated := FALSE;
+				nState := 9;
+			END_IF
+		END_IF
+
+
+	9: (* waiting for acknowledgement *)
+		TONTimeOut(IN:=TRUE, PT:=T#2S);
+		IF pKey^.command_semaphor_rw = FALSE
+			AND pActivation^.command_semaphor_rw = FALSE
+		THEN
+			TONTimeOut(IN:=FALSE);
+			ManualModeParamOld.nLogAxisNr := ManualModeParam.nLogAxisNr;
+			IF bEndManual THEN
+				Busy := FALSE;
+			END_IF
+
+			nState := 1;
+		END_IF
+
+		(* error timeout *)
+		IF TONTimeOut.Q = TRUE THEN
+			Err := TRUE;
+			nErrorState := nState;
+			nState := 99;
+		END_IF
+
+
+	99: (* error handling *)
+		TONTimeOut(IN:=FALSE);
+		(* end of manual mode *)
+		IF bEndManual THEN
+			IsActivated := FALSE;
+			Busy := FALSE;
+			nState := 1;
+		END_IF
+
+END_CASE
+]]></ST>
+    </Implementation>
+    <LineIds Name="HLI_AxisManualMode">
+      <LineId Id="3" Count="9" />
+      <LineId Id="444" Count="0" />
+      <LineId Id="13" Count="76" />
+      <LineId Id="387" Count="0" />
+      <LineId Id="91" Count="62" />
+      <LineId Id="400" Count="0" />
+      <LineId Id="154" Count="3" />
+      <LineId Id="396" Count="0" />
+      <LineId Id="488" Count="0" />
+      <LineId Id="159" Count="22" />
+      <LineId Id="487" Count="0" />
+      <LineId Id="182" Count="46" />
+      <LineId Id="388" Count="0" />
+      <LineId Id="230" Count="72" />
+      <LineId Id="399" Count="0" />
+      <LineId Id="398" Count="0" />
+      <LineId Id="401" Count="0" />
+      <LineId Id="303" Count="39" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

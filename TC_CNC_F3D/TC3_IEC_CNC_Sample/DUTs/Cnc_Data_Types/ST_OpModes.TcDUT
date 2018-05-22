@@ -1,0 +1,15 @@
+﻿<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.19">
+  <DUT Name="ST_OpModes" Id="{197ddc56-bccc-43a1-835a-c9f2a4fffb4b}">
+    <Declaration><![CDATA[TYPE ST_OpModes :
+STRUCT
+	Standby			: BOOL;
+	Auto				: BOOL;
+	Manual			: BOOL;
+	MDI				: BOOL;
+	Homing			: BOOL;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+    <ObjectProperties />
+  </DUT>
+</TcPlcObject>

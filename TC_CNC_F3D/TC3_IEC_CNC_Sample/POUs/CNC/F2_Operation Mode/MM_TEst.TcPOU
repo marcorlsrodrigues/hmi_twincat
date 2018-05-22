@@ -1,0 +1,467 @@
+﻿<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.19">
+  <POU Name="MM_TEst" Id="{566d7d31-2713-4b0d-81dc-3fe1043ec7ab}">
+    <Declaration><![CDATA[FUNCTION_BLOCK HLI_ChannelModeManual2
+VAR_INPUT
+
+	stManualModeParameter 			: ST_ManualModeParameter;
+	stManualModeControlElements 	: ST_ManualModeControlElements;
+
+	bMMHMI				: BOOL;			(* static signal, for Manual Mode from HMI *)
+	bReset				: BOOL;
+
+END_VAR
+VAR_OUTPUT
+	bInManualMode		: BOOL;
+	arrAxisInG201		: ARRAY[1..9] OF UINT;
+	Busy				: BOOL;
+	Err					: BOOL;
+	nErrorState			: UINT;
+	stManualModeState	: St_ManualModeState;
+END_VAR
+VAR
+    nHliChIfcIdx		: INT;      (* Index of channel specific HLI area *)
+	nState				: INT;
+	pString				: POINTER TO STRING;
+
+	pUnit				: POINTER TO MC_CONTROL_MCM_MODE_STATE_UNIT;
+	pCommand			: POINTER TO HLI_PROC_TRANS_TO_MODE_STATE;
+
+	pKey				: POINTER TO MC_CONTROL_HB_KEY_UNIT;
+	pIncr				: POINTER TO MC_CONTROL_HB_TIP_PARAM_UNIT;
+
+	stManualModeParameterOld : 	ST_ManualModeParameter;
+	incOld				: UINT;
+	nManualTypOld		: UINT;
+	i					: UINT;
+	bManual 			: BOOL;
+
+
+	(* FBs for manual mode *)
+	ManualActivation	: HLI_ManualActivation;
+
+	(* Es können Global 9 Control Units verwendet werden, dies ist von ISG so vorgegeben *)
+	ManualExecution				: ARRAY[1..9] OF HLI_ManualExecution;
+	ManualExecutionRapidMode	: ARRAY[1..9] OF HLI_ManualExecutionRapidMode;
+
+	ManualDeact			: HLI_ManualDeactivation;
+
+	RTRapidKey			: R_TRIG;
+	FTRapidKey			: F_TRIG;
+	ActChannelModeOld 	: UDINT;
+	TON_ModeChange		: TON;
+	TON_TimeOut			: TON;
+
+	ErrorState			: INT;
+	nChan				: UINT;
+	j					: INT;
+
+	nCheckDeactivation	: UINT;
+	strInitParameterOld	: STRING;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= 	*)
+(*     FB: HLI_ChannelModeManual2                            	*)
+(* --------------------------------------------------------- 	*)
+(*   Desc: Switch to Manual Mode and parametrize             	*)
+(*   Author: TV                                         		*)
+(*   Date: 18.07.2002                                        	*)
+(*   Last: 13.12.2010                                        	*)
+(*   Rev.: 4.0	                                              	*)
+(* ========================================================= 	*)
+
+
+
+nChan        := stManualModeParameter.stChannelParameter.nChan;
+nHliChIfcIdx := stManualModeParameter.stChannelParameter.nChan - 1;
+
+IF  nChan <= 0 OR gNrCh < nChan OR					(* check for channel no *)
+	nChan > 2 THEN		(* check for zero pointer *)
+	Busy := FALSE;
+	RETURN; (* A b b r u c h *)
+END_IF
+
+IF  gpCh[nHliChIfcIdx] = 0 THEN		(* check for zero pointer *)
+	Busy := FALSE;
+	RETURN; (* A b b r u c h *)
+END_IF
+
+
+IF bMMHMI THEN
+	Busy := FALSE;
+	RETURN; (* A b b r u c h *)
+END_IF
+
+
+(* Handrad :
+
+dem Kern IMMER die aktuellen Incremente mitteilen 
+Hinweis : es können 6 Handräder verwendet werden
+Siehe auch Handradparameter im SystemManager 
+hr_data[0].adr_hr_zaehler                             0x0       
+# Handradzaehleradresse (bei HW) bzw Index im HLI-Array
+*)
+
+
+(* Vorgabe der Handrad Inkremente, es werden bis zu 6 Handräder unterstützt *)
+FOR j := 1 TO (HLI_HW_MAXIDX + 1) DO
+	gpCh[nHliChIfcIdx]^.hb_mc_control.handwheel_incs[j-1].enable_w  := TRUE;
+	gpCh[nHliChIfcIdx]^.hb_mc_control.handwheel_incs[j-1].command_w := stManualModeControlElements.nHandwheelInc[j];
+END_FOR
+
+IF 	CNCSystem.Channel[nChan].ActMode <> HLI_IMCM_MANUAL_MODE AND
+	CNCSystem.Channel[nChan].ActMode <> HLI_IMCM_AUTOMATIC_MODE   AND
+	CNCSystem.Channel[nChan].ActMode <> HLI_IMCM_MDI_MODE THEN
+		strInitParameterOld := '';
+		Busy := FALSE;
+		nState := 0;
+	RETURN; (* A b b r u c h *)
+ELSE
+	bManual := TRUE;
+END_IF
+
+
+IF  CNCSystem.Channel[nChan].ActMode <> HLI_IMCM_MANUAL_MODE THEN
+	strInitParameterOld := '';
+END_IF
+
+
+(* Clear all request from the HMI *)
+IF gpCh[nHliChIfcIdx]^.hb_mc_control.key[0].request_semaphor_rw THEN
+	gpCh[nHliChIfcIdx]^.hb_mc_control.key[0].request_semaphor_rw := FALSE;
+END_IF
+
+IF gpCh[nHliChIfcIdx]^.hb_mc_control.activation.request_semaphor_rw THEN
+	gpCh[nHliChIfcIdx]^.hb_mc_control.activation.request_semaphor_rw := FALSE;
+END_IF
+
+IF gpCh[nHliChIfcIdx]^.hb_mc_control.tip_parameter.request_semaphor_rw THEN
+	gpCh[nHliChIfcIdx]^.hb_mc_control.tip_parameter.request_semaphor_rw := FALSE;
+END_IF
+
+IF gpCh[nHliChIfcIdx]^.hb_mc_control.jog_parameter.request_semaphor_rw THEN
+	gpCh[nHliChIfcIdx]^.hb_mc_control.jog_parameter.request_semaphor_rw := FALSE;
+END_IF
+
+
+Busy := TRUE;
+
+IF bReset THEN
+	nState := 0;
+	nErrorState := 0;
+	Err := FALSE;
+	bInManualMode := FALSE;
+END_IF
+
+
+IF stManualModeParameter.stChannelParameter.nManualTyp = 4 THEN
+
+	PRG_AnalogJoystick(	nLogAxisNr:= stManualModeParameter.stAxisParameter.stControlUnit[1].nLogAxisNumber,
+								Analog_Value:= stManualModeControlElements.stControlJoystickValue[1],
+								AnalogValueMin:= stManualModeParameter.stJoystickParameter.AnalogValueMin,
+								AnalogValueMax:= stManualModeParameter.stJoystickParameter.AnalogValueMax,
+								AnalogValueZeroDeadBand:= stManualModeParameter.stJoystickParameter.AnalogValueZeroDeadBand,
+								bKeyPos:= stManualModeControlElements.stControlKeys[1].bKeyPos,
+								bKeyNeg:= stManualModeControlElements.stControlKeys[1].bKeyNeg);
+
+	PRG_AnalogJoystick(	nLogAxisNr:= stManualModeParameter.stAxisParameter.stControlUnit[2].nLogAxisNumber,
+								Analog_Value:= stManualModeControlElements.stControlJoystickValue[2],
+								AnalogValueMin:= stManualModeParameter.stJoystickParameter.AnalogValueMin,
+								AnalogValueMax:= stManualModeParameter.stJoystickParameter.AnalogValueMax,
+								AnalogValueZeroDeadBand:= stManualModeParameter.stJoystickParameter.AnalogValueZeroDeadBand,
+								bKeyPos:= stManualModeControlElements.stControlKeys[2].bKeyPos,
+								bKeyNeg:= stManualModeControlElements.stControlKeys[2].bKeyNeg);
+
+	PRG_AnalogJoystick(	nLogAxisNr:= stManualModeParameter.stAxisParameter.stControlUnit[3].nLogAxisNumber,
+								Analog_Value:= stManualModeControlElements.stControlJoystickValue[3],
+								AnalogValueMin:= stManualModeParameter.stJoystickParameter.AnalogValueMin,
+								AnalogValueMax:= stManualModeParameter.stJoystickParameter.AnalogValueMax,
+								AnalogValueZeroDeadBand:= stManualModeParameter.stJoystickParameter.AnalogValueZeroDeadBand,
+								bKeyPos:= stManualModeControlElements.stControlKeys[3].bKeyPos,
+								bKeyNeg:= stManualModeControlElements.stControlKeys[3].bKeyNeg);
+
+	PRG_AnalogJoystick(	nLogAxisNr:= stManualModeParameter.stAxisParameter.stControlUnit[4].nLogAxisNumber,
+								Analog_Value:= stManualModeControlElements.stControlJoystickValue[4],
+								AnalogValueMin:= stManualModeParameter.stJoystickParameter.AnalogValueMin,
+								AnalogValueMax:= stManualModeParameter.stJoystickParameter.AnalogValueMax,
+								AnalogValueZeroDeadBand:= stManualModeParameter.stJoystickParameter.AnalogValueZeroDeadBand,
+								bKeyPos:= stManualModeControlElements.stControlKeys[4].bKeyPos,
+								bKeyNeg:= stManualModeControlElements.stControlKeys[4].bKeyNeg);
+
+	PRG_AnalogJoystick(	nLogAxisNr:= stManualModeParameter.stAxisParameter.stControlUnit[5].nLogAxisNumber,
+								Analog_Value:= stManualModeControlElements.stControlJoystickValue[5],
+								AnalogValueMin:= stManualModeParameter.stJoystickParameter.AnalogValueMin,
+								AnalogValueMax:= stManualModeParameter.stJoystickParameter.AnalogValueMax,
+								AnalogValueZeroDeadBand:= stManualModeParameter.stJoystickParameter.AnalogValueZeroDeadBand,
+								bKeyPos:= stManualModeControlElements.stControlKeys[5].bKeyPos,
+								bKeyNeg:= stManualModeControlElements.stControlKeys[5].bKeyNeg);
+
+ELSE
+	(* Achsoverride wieder auf 100 % setzen *)
+	FOR j := 1 TO UDINT_TO_INT(stManualModeParameter.stChannelParameter.nControlUnits) DO
+		HLI_SetAxisOverride(nAxisNr := stManualModeParameter.stAxisParameter.stControlUnit[j].nLogAxisNumber, nOverride := 1000);
+	END_FOR
+END_IF
+
+(******** Parallelinterpolation mit G201 *************************************)
+IF CNCSystem.Channel[nChan].ActMode = HLI_IMCM_AUTOMATIC_MODE OR CNCSystem.Channel[nChan].ActMode = HLI_IMCM_MDI_MODE THEN
+	arrAxisInG201 := HLI_AxisInManualMode(nChan);
+	FOR j := 1 TO UDINT_TO_INT(stManualModeParameter.stChannelParameter.nControlUnits) DO
+		stManualModeParameter.stAxisParameter.stControlUnit[j].nLogAxisNumber := arrAxisInG201[j];
+	END_FOR
+ELSE
+	FOR j := 1 TO UDINT_TO_INT(stManualModeParameter.stChannelParameter.nControlUnits) DO
+	arrAxisInG201[j] := 0;
+	END_FOR
+END_IF
+(* **************************************************************************** *)
+
+
+
+
+CASE nState OF
+
+
+	0: (* IDLE *)
+		Busy := FALSE;
+		bInManualMode := FALSE;
+
+
+		IF (CNCSystem.Channel[nChan].ActMode = HLI_IMCM_MANUAL_MODE AND stManualModeParameter.stChannelParameter.nManualTyp <> 0 AND CNCSystem.Channel[nChan].ActState = HLI_IMCM_PROCESS_ACTIVE) OR (* Manual Mode *)
+			(arrAxisinG201[1] <> 0)	 (* mindestens eine Achse in G201 *) AND
+			(CNCSystem.Channel[nChan].ActState = HLI_IMCM_PROCESS_ACTIVE) (* Channel is active *)
+		THEN
+
+			nErrorState := 0;
+			Err := FALSE;
+
+
+			stManualModeParameterOld	:= stManualModeParameter;
+			ActChannelModeOld			:= cncsystem.Channel[nChan].ActMode;
+			TON_ModeChange(in:=FALSE);
+			i:= 1;
+			nState := 10;
+
+		END_IF
+
+
+		(* Evt. hier die Betriebsart auf Standby und danach
+		wieder in Manual umschalten *)
+
+
+
+	10:
+
+			(* Beim Mode change wird eine Verzoegerung benötigt, weil
+				die TcApplication bei Anwahl des Manual Mode den Handbetrieb 
+				ebenfalls parametriert 
+			 *)
+			ManualDeact(bExecute := FALSE);
+			TON_ModeChange(in:=TRUE, PT:=T#30ms);
+
+			IF TON_ModeChange.Q THEN
+				TON_ModeChange(in:=FALSE);
+				i :=1;
+				nCheckDeactivation := 0;
+				nState := 20;
+			END_IF
+
+
+
+	20: (* deselecting axis first *)
+		IF gpCh[nHliChIfcIdx]^.bahn_state.coord_r[i-1].log_achs_nr_r <> 0 THEN
+			nCheckDeactivation := nCheckDeactivation + 1;
+
+			ManualDeact(nChan := nChan, nAxisIndex :=i, bExecute := TRUE);
+
+			IF ManualDeact.Busy THEN
+				nState := 25;
+			END_IF
+		ELSE
+			IF nCheckDeactivation < gNrAx THEN
+				i := i+1;
+
+				IF i > HLI_CH_AX_MAX THEN
+					i := 1;
+					nState := 26;
+				END_IF
+
+			ELSE
+				ManualActivation(bExecute := FALSE);
+				i := 1;
+				nState := 26;
+			END_IF
+		END_IF
+
+
+
+
+	25:
+		ManualDeact(bExecute := FALSE);
+
+		IF ManualDeact.Err THEN
+			Err := TRUE;
+			nErrorState := nState;
+			nState := 99;
+		END_IF
+
+		IF ManualDeact.Busy = FALSE THEN
+
+			IF i >= HLI_CH_AX_MAX AND i <> 0  THEN
+				i:=1; (* reset the array counter *)
+				ManualActivation(bExecute := FALSE);
+				i := 1;
+				nState := 26;
+			ELSE
+				ManualDeact(bExecute := FALSE);
+				nState := 20;
+				i:= i+1;
+			END_IF
+		END_IF
+
+		(* Activation of an manual mode string, eg. TRAFO ON or ECS ON *)
+26:		IF (stManualModeParameter.stChannelParameter.strInitParameter  <> '' AND stManualModeParameter.stChannelParameter.strInitParameter <> strInitParameterOld) THEN
+
+			gpCh[nHliChIfcIdx]^.channel_mc_control.mode_and_state.command_w.to_mode := HLI_IMCM_MANUAL_MODE ;
+			gpCh[nHliChIfcIdx]^.channel_mc_control.mode_and_state.command_w.to_state := HLI_IMCM_PROCESS_SELECTED;
+			gpCh[nHliChIfcIdx]^.channel_mc_control.mode_and_state.command_w.channel_number := nChan;
+			pString := ADR(gpCh[nHliChIfcIdx]^.channel_mc_control.mode_and_state.command_w.parameter);
+			pString^ := '';
+
+			gpCh[nHliChIfcIdx]^.channel_mc_control.mode_and_state.command_semaphor_rw := TRUE;
+			TON_TimeOut(in:= FALSE);
+			nState := 27;
+
+		ELSE
+			nState := 30;
+		END_IF
+
+
+27:		IF (gpCh[nHliChIfcIdx]^.channel_mc_control.mode_and_state.command_semaphor_rw = FALSE) THEN
+
+
+			gpCh[nHliChIfcIdx]^.channel_mc_control.mode_and_state.command_w.to_mode := HLI_IMCM_MANUAL_MODE ;
+			gpCh[nHliChIfcIdx]^.channel_mc_control.mode_and_state.command_w.to_state := HLI_IMCM_PROCESS_ACTIVE;
+			gpCh[nHliChIfcIdx]^.channel_mc_control.mode_and_state.command_w.channel_number := nChan;
+			pString := ADR(gpCh[nHliChIfcIdx]^.channel_mc_control.mode_and_state.command_w.parameter);
+			pString^ := stManualModeParameter.stChannelParameter.strInitParameter;
+
+			gpCh[nHliChIfcIdx]^.channel_mc_control.mode_and_state.command_semaphor_rw := TRUE;
+			TON_ModeChange(in:=FALSE);
+			TON_TimeOut(in:= FALSE);
+			nState := 28;
+		END_IF
+
+		TON_TimeOut(in:=TRUE, PT:=T#5s);
+		IF TON_TimeOut.Q THEN
+			nState := 99;
+		END_IF
+
+28:		IF (gpCh[nHliChIfcIdx]^.channel_mc_control.mode_and_state.command_semaphor_rw = FALSE) THEN
+			TON_ModeChange(in:=TRUE, PT:=T#1s);
+			IF  TON_ModeChange.Q THEN
+				strInitParameterOld := stManualModeParameter.stChannelParameter.strInitParameter;
+				nState := 30;
+			END_IF
+		END_IF
+
+		TON_TimeOut(in:=TRUE, PT:=T#5s);
+		IF TON_TimeOut.Q THEN
+			nState := 99;
+		END_IF
+
+30: 	(* --- activate KeyControlUnit 1 - 4 --- *)
+
+			ManualActivation(bExecute := TRUE,
+										nChan := nChan,
+										nManualTyp 		:= stManualModeParameter.stChannelParameter.nManualTyp,
+										nKeyControlUnit := i + stManualModeParameter.stChannelParameter.nControlUnits * (nHliChIfcIdx),
+										nHBA_Res 		:= stManualModeParameter.stChannelParameter.nHandwheelResolution,
+										Inc 			:= stManualModeParameter.stChannelParameter.nInc,
+										Speed 			:= stManualModeParameter.stAxisParameter.stControlUnit[i].nSpeed,
+										nLogAxisNr 		:= stManualModeParameter.stAxisParameter.stControlUnit[i].nLogAxisNumber);
+			nState := 35;
+
+35: 	(* waiting for acknowledge *)
+
+		ManualActivation(bExecute := FALSE);
+
+		IF ManualActivation.Err THEN
+			Err := TRUE;
+			nErrorState := nState;
+			nState := 99;
+		END_IF
+
+		IF ManualActivation.Busy = FALSE THEN
+
+			IF i >= stManualModeParameter.stChannelParameter.nControlUnits THEN
+				i:=1; (* reset the array counter *)
+				ManualActivation(bExecute := FALSE);
+				i := 1;
+				nState := 40;
+			ELSE
+				ManualActivation(bExecute := FALSE);
+				nState := 30;
+				i:= i+1;
+			END_IF
+		END_IF
+
+	40: (* endlich Handbetrieb *)
+		bInManualMode := TRUE;
+
+		FOR j := 1 TO UDINT_TO_INT(stManualModeParameter.stChannelParameter.nControlUnits) DO
+			ManualExecution[j](	nChan := nChan,
+								nKeyControlUnit := j + stManualModeParameter.stChannelParameter.nControlUnits * (nHliChIfcIdx),
+								bKeyPos := stManualModeControlElements.stControlKeys[j].bKeyPos,
+								bKeyNeg := stManualModeControlElements.stControlKeys[j].bKeyNeg); (* no timeouts *)
+
+			ManualExecutionRapidMode[j](nChan := nChan,
+										nKeyControlUnit := j + stManualModeParameter.stChannelParameter.nControlUnits * (nHliChIfcIdx),
+										bExecute := stManualModeControlElements.stControlKeys[j].bKeyRapid); (* no timeouts *)
+
+
+		END_FOR
+
+		(* end of manual mode *)
+		IF (bManual = FALSE) OR
+				MEMCMP(ADR(stManualModeParameter),ADR(stManualModeParameterOld),SIZEOF(stManualModeParameter))<>0 OR
+				cncsystem.Channel[nChan].ActMode <> ActChannelModeOld OR
+				stManualModeParameter.stChannelParameter.nManualTyp = 0
+			THEN
+
+			FOR j := 1 TO UDINT_TO_INT(stManualModeParameter.stChannelParameter.nControlUnits) DO
+				ManualExecution[j](nChan := nChan,	nKeyControlUnit := j + stManualModeParameter.stChannelParameter.nControlUnits * (nHliChIfcIdx), bKeyPos := FALSE, bKeyNeg := FALSE); (* no timeouts *)
+			END_FOR
+
+
+			i:=1 (* resets the counter for the following deactivation *);
+			ManualDeact(bExecute := FALSE);
+
+			stManualModeParameterOld 	:= stManualModeParameter;
+
+			IF cncsystem.Channel[nChan].ActMode <> ActChannelModeOld OR stManualModeParameter.stChannelParameter.nManualTyp = 0 THEN
+				ActChannelModeOld := cncsystem.Channel[nChan].ActMode;
+				TON_ModeChange(in:=FALSE);
+				nState := 0;
+			ELSE
+				nState := 0; (* evt. wird hier auch eine Verzoegerungszeit benötigt,
+									  Fehler 150054 dann nState = 0 *)
+				bInManualMode := FALSE;
+			END_IF
+		END_IF
+
+
+	99: (* error handling *)
+		ErrorState := nState;
+		(* end of manual mode *)
+		IF bManual = FALSE THEN
+			Busy := FALSE;
+			nState := 1;
+		END_IF
+
+
+END_CASE]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

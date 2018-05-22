@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4019.2">
+  <POU Name="FB_ReadPParamValue" Id="{5d5a1788-fa1b-461b-9148-8b194f65201f}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ReadPParamValue
+VAR_INPUT
+   nIdxGrp              : UDINT;
+   bStart               : BOOL;
+   pSrc                 : POINTER TO STRING;
+   pDest                : POINTER TO DINT;
+END_VAR
+VAR_OUTPUT
+   Busy                 : BOOL;
+   bErr                 : BOOL;
+   bErrID               : UDINT;
+END_VAR
+VAR
+   fbAdsRWEx            : ADSRDWRTEX;
+   bStarted             : BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*     FB: FB_ReadFileOffset                                 *)
+(* --------------------------------------------------------- *)
+(*   Desc: Example, shows how to read file name              *)
+(*       : from the CNC                                      *)
+(* Author: MK                                                *)
+(*   Date: 21.12.2011                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+IF bStarted = FALSE THEN
+   IF bStart = TRUE THEN
+      bStarted := TRUE;
+      bErr := FALSE;
+      Busy := TRUE;
+   END_IF
+END_IF
+
+IF bStarted THEN
+   (* raising edge of Timer triggers read/write request *)
+
+	fbAdsRWEx(NetID := '', Port := 552, IdxGrp := nIdxGrp, IdxOffs := 16#01C,
+				WRITELEN := 2, READLEN := 8, SRCADDR := pSrc, DESTADDR := pDest, WRTRD := bStarted, TMOUT := T#2s);
+   IF NOT fbAdsRWEx.Busy THEN
+      (* There was an error in the execution of the read/write request *)
+      IF fbAdsRWEx.Err THEN
+         bErr := TRUE;
+      END_IF
+		bErrID := fbAdsRWEx.ERRID;
+      fbAdsRWEx(WRTRD := FALSE);
+      bStarted := FALSE;
+      Busy := FALSE;
+   END_IF
+END_IF
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

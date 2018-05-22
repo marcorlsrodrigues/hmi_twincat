@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4018.5">
+  <DUT Name="RecipeList_Struct" Id="{d1482124-3abc-4a92-ad4d-85fa794454ea}">
+    <Declaration><![CDATA[{attribute 'pack_mode':='1'}
+TYPE RecipeList_Struct :
+STRUCT
+   ToolId       : LREAL;
+   PosX         : LREAL;
+   PosY         : LREAL;
+   PosZ         : LREAL;
+   Tool1        : LREAL;
+   Tool2        : LREAL;
+   Tool3        : LREAL;
+   GlueTime     : LREAL;
+   Velo         : LREAL;
+   Reserve      : ARRAY[10..20] OF LREAL;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

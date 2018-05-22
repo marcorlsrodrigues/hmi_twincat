@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.38">
+  <POU Name="CncPlcManualFunctions" Id="{eda64713-c270-468f-bfad-757e8164d9dc}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM CncPlcManualFunctions
+VAR
+	bSetString					: BOOL := TRUE;
+	PLCManual_Off				: BYTE := 0;
+	PLCManual_StatusLeft		: BYTE := 1;
+	PLCManual_StatusRight	: BYTE := 2;
+	PLCManual_LockLeft		: BYTE := 32;
+	PLCManual_LockRight		: BYTE := 64;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: CncPlcManualFunctions                             *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(* Author: MK                                                *)
+(*   Date: 21.08.2008                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+(* Manual functions *)
+PortalStatus[1] := PLCManual_StatusLeft;
+PortalStatus[2] := PLCManual_StatusLeft;
+PortalStatus[3] := PLCManual_StatusLeft;
+PortalStatus[4] := PLCManual_LockRight;
+
+SchweissenStatus[1] := PLCManual_Off;
+SchweissenStatus[2] := PLCManual_StatusLeft;
+SchweissenStatus[3] := PLCManual_StatusRight;
+SchweissenStatus[4] := PLCManual_StatusLeft;
+
+MSGList3[3] := PortalOn[7];
+
+
+IF bSetString THEN
+	PortalActValueLeft[3] := INT_TO_STRING(DemoUpDown.UpDown);
+	PortalActValueLeft[4] := INT_TO_STRING(DemoUpDown.UpDown);
+	PortalActValueLeft[5] := INT_TO_STRING(DemoUpDown.UpDown);
+END_IF
+
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

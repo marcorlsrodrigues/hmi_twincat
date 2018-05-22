@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <POU Name="SetHMIVariables" Id="{6097a0bc-e8ba-4f43-9675-d7c0c8f7c673}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM SetHMIVariables
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[GVL.Temp_Camara_in := IOs.Temp_Camara_in;
+GVL.Temp_8 := IOs.Temp_8;
+GVL.Temp_Cabos := IOs.Temp_Cabos;
+GVL.Temp_Chiller := IOs.Temp_Chiller;
+GVL.Temp_Extrusor_1 := IOs.Temp_Extrusor_1;
+GVL.Temp_Quadro := IOs.Temp_Quadro;
+GVL.Temp_Tabuleiro := IOs.Temp_Tabuleiro;
+IOs.IO_Out_Aque_Mesa := GVL.gvl_aquecimento_mesa;
+IOs.IO_Out_Aque_Extrusor := GVL.gvl_aquecimento_extrusor;
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="SetHMIVariables">
+      <LineId Id="6" Count="5" />
+      <LineId Id="19" Count="1" />
+      <LineId Id="14" Count="1" />
+      <LineId Id="12" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

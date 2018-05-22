@@ -1,0 +1,114 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4018.5">
+  <POU Name="MySystemTime" Id="{bf9038a3-cb69-468b-8387-ddf4194881ec}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MySystemTime
+VAR
+	nState								: INT;
+	fbGetTime							: NT_GetTime;
+	tonGetTime							: TON;
+	bSystemTimeValid					: BOOL := FALSE;
+	bFirstCycle							: BOOL;
+
+	ptBaseTime							: TIME := t#1000ms;
+	ptTime								: TIME := t#1000ms;
+	dtSystemTime						: DT;
+	stSystemTime						: TIMESTRUCT;
+	sTime 								: STRING;		(*long date, time string*)
+	sShortTime 							: STRING;		(*short time string*)
+	sShortDate 							: STRING;		(*short date string*)
+	nDayShortDate						: WORD;
+
+	(* time zone information *)
+	wHour									: WORD := 99;
+	tzID									: E_TimeZoneID := eTimeZoneID_Invalid;
+																(*	eTimeZoneID_Invalid := -1,
+																	eTimeZoneID_Unknown := 0,
+																	eTimeZoneID_Standard := 1,
+																	eTimeZoneID_Daylight := 2 *)
+	fbGetTimeZoneInformation		: FB_GetTimeZoneInformation;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* Read the time *)
+
+IF bFirstCycle = FALSE THEN
+	bFirstCycle := TRUE;
+	(* 970 = 1000 - 30 bei 10ms, 930 = 1000 - 60 bei 20ms ??? 921-940 *)
+	ptBaseTime := T#1000MS - UDINT_TO_TIME(3 * TwinCAT_SystemInfoVarList._TaskInfo[1].CycleTime/10000);
+	ptTime := ptBaseTime;
+END_IF
+
+
+CASE nState OF
+	0:
+		tonGetTime(IN := TRUE, PT := ptTime);
+		IF tonGetTime.Q THEN
+			tonGetTime(IN := FALSE);
+			nState := 10;
+		END_IF
+
+	10:
+		fbGetTime(START := TRUE);
+		IF fbGetTime.BUSY = FALSE THEN
+			stSystemTime := fbGetTime.TIMESTR;
+			dtSystemTime := SYSTEMTIME_TO_DT(fbGetTime.TIMESTR);
+			fbGetTime(START := FALSE);
+			sTime := SYSTEMTIME_TO_STRING(stSystemTime);
+			sShortTime := MID(STR:=sTime, LEN:=8, POS:=12);
+
+			(* build short date string *)
+			IF nDayShortDate <> MySystemTime.stSystemTime.wDay THEN
+				nDayShortDate := MySystemTime.stSystemTime.wDay;
+				(* day *)
+				IF MySystemTime.stSystemTime.wDay < 10 THEN
+					sShortDate := CONCAT(STR1:='0', STR2:=DWORD_TO_STRING(MySystemTime.stSystemTime.wDay));
+				ELSE
+					sShortDate := DWORD_TO_STRING(MySystemTime.stSystemTime.wDay);
+				END_IF
+				sShortDate := CONCAT(STR1:=sShortDate, STR2:='.');
+				(* month *)
+				IF MySystemTime.stSystemTime.wMonth < 10 THEN
+					sShortDate := CONCAT(STR1:=sShortDate, STR2:='0');
+					sShortDate := CONCAT(STR1:=sShortDate, STR2:=DWORD_TO_STRING(MySystemTime.stSystemTime.wMonth));
+				ELSE
+					sShortDate := CONCAT(STR1:=sShortDate, STR2:=DWORD_TO_STRING(MySystemTime.stSystemTime.wMonth));
+				END_IF
+				(* year *)
+				sShortDate := CONCAT(STR1:=sShortDate, STR2:='.');
+				sShortDate := CONCAT(STR1:=sShortDate, STR2:=DWORD_TO_STRING(MySystemTime.stSystemTime.wYear));
+			END_IF
+
+			bSystemTimeValid := TRUE;
+			nState := 0;
+
+			IF stSystemTime.wMilliseconds > 30 THEN
+				ptTime := ptBaseTime - t#20ms;
+			ELSIF stSystemTime.wMilliseconds < 7 THEN
+				ptTime := ptBaseTime + T#20MS;
+			ELSE
+				ptTime := ptBaseTime;
+			END_IF
+		END_IF
+
+END_CASE
+
+
+(* get time zone information, summer/winter, only once a day *)
+IF MySystemTime.stSystemTime.wHour <> wHour THEN
+	IF MySystemTime.stSystemTime.wHour = 4 OR wHour = 99 THEN
+
+		fbGetTimeZoneInformation(bExecute := TRUE);
+		IF fbGetTimeZoneInformation.bBusy = FALSE THEN
+			fbGetTimeZoneInformation(bExecute := FALSE);
+			tzID := fbGetTimeZoneInformation.tzID;
+			wHour := MySystemTime.stSystemTime.wHour;
+		END_IF
+
+	ELSE
+		wHour := MySystemTime.stSystemTime.wHour;
+	END_IF
+END_IF
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <POU Name="CncHmiData" Id="{0592e548-bae8-44b7-911a-d42438e0e924}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM CncHmiData
+VAR_INPUT
+END_VAR
+VAR
+	PlcHmiData						: ST_HmiData;
+	nChIdx							: UDINT;
+	fbReadChannelData				: ARRAY[0..5] OF FB_ReadChannelData;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: CncHmiData                                        *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(* Author: MK                                                *)
+(*   Date: 01.12.2015                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+//RETURN;
+
+PlcHmiData.NumberOfChannels := gpPform^.nc_config.number_of_channels_r;
+FOR nChIdx := 0 TO PlcHmiData.NumberOfChannels - 1 DO
+	fbReadChannelData[nChIdx](nChIdx:=nChIdx, pHmiChannel:=ADR(PlcHmiData.Channel[nChIdx]));
+END_FOR
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="CncHmiData">
+      <LineId Id="3" Count="17" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

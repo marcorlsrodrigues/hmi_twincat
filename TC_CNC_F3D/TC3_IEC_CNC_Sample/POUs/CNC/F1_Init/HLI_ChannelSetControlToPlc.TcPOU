@@ -1,0 +1,88 @@
+﻿<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.19">
+  <POU Name="HLI_ChannelSetControlToPlc" Id="{cb291fd4-0fcc-4d9d-84b8-5ea96a7ed0ea}">
+    <Declaration><![CDATA[FUNCTION HLI_ChannelSetControlToPlc : bool
+VAR_INPUT
+	nChan						: UINT;
+END_VAR
+VAR
+	nHliChIdx				: UINT;
+	pChannel					: pointer to HIGH_LEVEL_INTERFACE_CH;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: HLI_ChannelSetControlToPlc                        *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(* Author: MK                                                *)
+(*   Date: 21.12.2011                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+(* enable control units used by the program *)
+
+nHliChIdx := nChan - 1;
+
+IF nChan <= 0 OR gNrCh < nChan OR			(* check for channel no *)
+	gpCh[nHliChIdx] = 0 THEN					(* check for zero pointer *)
+	HLI_ChannelSetControlToPlc := FALSE;
+	RETURN; (* e x i t *)
+END_IF
+
+
+pChannel := gpCh[nHliChIdx];
+
+(* PLC_Present for the channel *)
+pChannel^.head.plc_present_w := TRUE;
+
+(* reset *)
+pChannel^.bahn_lc_control.plc_reset.enable_w := TRUE;
+pChannel^.channel_mc_control.mode_and_state.enable_w := TRUE;
+
+(* override *)
+pChannel^.bahn_mc_control.override_feedrate.enable_w := TRUE;
+
+(* FeedHold *)
+pChannel^.bahn_mc_control.feedhold.enable_w := TRUE;
+
+(* Single Step *)
+pChannel^.bahn_mc_control.single_block.enable_w := TRUE;
+
+(* BackwardMotion *)
+pChannel^.bahn_mc_control.backward_motion.enable_w := TRUE;
+
+(* ReducedFeed *)
+pChannel^.bahn_mc_control.reduced_speed.enable_w := TRUE;
+
+(* Channel switch "jog of path" *)
+pChannel^.bahn_mc_control.suspend_axis_output.enable_w := TRUE;
+
+(* logon for error messages *)
+pChannel^.mc_error.enable_w := TRUE;
+
+(* program block ignore *)
+pChannel^.decoder_mc_control.program_block_ignore.enable_w := TRUE;
+
+(* Syntax Check *)
+pChannel^.decoder_mc_control.execution_mode.enable_w := TRUE;
+
+(* Optional stop M01 *)
+pChannel^.bahn_mc_control.m01_stop_enable.enable_w := TRUE;
+
+(* Enable channel specific messages handling *)
+pChannel^.msg_mc_control.enable_w := TRUE;
+
+(* Enable watchdog, for real machines
+Cycle time of system task is given in 100 ns.
+Cycle time of CNC is given in mikro seconds.
+*)
+//pChannel^.head.mc_watchdog.enable_w := TRUE;
+// //pChannel^.head.mc_watchdog.cycle_time_w := 2 * TwinCAT_SystemInfoVarList._TaskInfo[1].CycleTime / 10;
+//pChannel^.head.mc_watchdog.cycle_time_w := 100000;		(* 100ms *)
+
+HLI_ChannelSetControlToPlc := TRUE;
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

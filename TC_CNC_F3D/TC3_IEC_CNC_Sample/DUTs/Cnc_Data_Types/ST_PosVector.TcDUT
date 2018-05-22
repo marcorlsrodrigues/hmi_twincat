@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <DUT Name="ST_PosVector" Id="{67394ac1-b5f2-4280-b2c4-a537ba825024}">
+    <Declaration><![CDATA[TYPE ST_PosVector :
+STRUCT
+	fPosX				: LREAL;
+	fPosY				: LREAL;
+	fPosZ				: LREAL;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

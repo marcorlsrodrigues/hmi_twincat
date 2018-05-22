@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <GVL Name="Global_Variables" Id="{be5fbab2-9822-452a-bd00-37e018eeb982}">
+    <Declaration><![CDATA[VAR_GLOBAL CONSTANT
+	FIRST_MESSAGE						: INT := 1;
+	LAST_MESSAGE						: INT := 50;
+	
+	AXIS_MANUAL_KEYUNIT_MAX			: INT := 0;		(* [0..HLI_KEY_MAXIDX(11)], 0=1 KeyUnit, 1=2 KeyUnit, ... *)	
+END_VAR
+
+VAR_GLOBAL
+	CncSystem							: ST_CncSystem;
+	Axis1CurrPosition: LREAL;
+	Axis2CurrPosition: LREAL;
+	Axis3CurrPosition: LREAL;
+END_VAR
+
+// MK check
+VAR_GLOBAL
+	(*--------------------------*)
+	(*	Connection variables     *)
+	(*--------------------------*)
+
+	(* General signals, only for starting BDE *)
+	PlcMachineMode						: ARRAY[0..5] OF ST_MachineMode;	(* HMI -> PLC *)
+	PLCSelectedChannel				: INT;			(* HMI -> PLC *)
+
+	PlcFeedOverride					: UINT;			(* HMI -> PLC *)
+	PlcFeedOverride2					: UINT;			(* HMI -> PLC *)
+	PlcSpindleOverride				: UINT;			(* HMI -> PLC *)
+
+	(* PLC control signals *)
+	PlcAxisEnable						: BOOL;			(* HMI -> PLC *)
+	PlcDeleteFailure					: BOOL;			(* HMI -> PLC *)
+
+	PlcReset								: BOOL;
+	PlcVarWriteSettings				: BOOL;
+
+
+	PlcArrayInt							: ARRAY[0..20] OF INT;
+	PlcArrayReal						: ARRAY[0..10] OF REAL;
+	PlcArrayString3					: ARRAY[0..10] OF STRING(50);
+	PlcArrayString						: ARRAY[0..10] OF STRING;
+
+	(* Function keys 5, 6 and 7 on the right side *)
+	PlcFKeyRight5						: BOOL;
+	PlcFKeyRight6						: BOOL;
+	PlcFKeyRight7						: BOOL;
+	
+	(*--------------------------*)
+	(*	BDE, PLC -> HMI          *)
+	(*--------------------------*)
+	BDEControlOn						: BOOL;
+	BDEAutomatic						: BOOL;
+	BDEVarBoolTimer					: ARRAY[0..10] OF BOOL;
+	BDEVarBoolCounter					: ARRAY[0..10] OF BOOL;
+	BDEVarBoolMessage					: ARRAY[0..50] OF BOOL;
+	
+	(* Manual Mode *)
+	PlcManualModeLeftKey				: BOOL;
+	PlcManualModeRightKey			: BOOL;
+	PlcManualModeRapidFeedKey		: BOOL;
+	PlcManualModeSelectedAxis		: UINT;
+	PlcManualModeSpeed				: UDINT;
+	PlcManualModeIncrements			: UDINT;
+	PlcManualModeOpMode				: UINT;	(* 1-handwheel, 2-continuous, 3-Incremental, ... *)
+	PlcManualModeHandWheelIncs		: DINT;
+	PlcManualModeHandWheelRes		: DINT := 1;
+
+	(*--------------------------*)
+	(* Tool management          *)
+	(*--------------------------*)
+	PlcToolManagement					: ST_ToolManagement;
+	
+   (*--------------------------*)
+   (* Recipe HMI -> PLC        *)
+   (*--------------------------*)
+   RecipeData							: RecipeHeader_Struct;
+	
+END_VAR
+
+VAR_GLOBAL
+	(*--------------------------*)
+	(*	Messages                 *)
+	(*--------------------------*)
+	MSGList1								: ARRAY [FIRST_MESSAGE..LAST_MESSAGE] OF BOOL;
+	MSGListQuit1						: ARRAY [FIRST_MESSAGE..LAST_MESSAGE] OF BOOL;
+	MSGList2								: ARRAY [FIRST_MESSAGE..LAST_MESSAGE] OF BOOL;
+	MSGListQuit2						: ARRAY [FIRST_MESSAGE..LAST_MESSAGE] OF BOOL;
+	MSGList3								: ARRAY [FIRST_MESSAGE..LAST_MESSAGE] OF BOOL;
+	MSGListQuit3						: ARRAY [FIRST_MESSAGE..LAST_MESSAGE] OF BOOL;
+	MSGList4								: ARRAY [FIRST_MESSAGE..LAST_MESSAGE] OF BOOL;
+	MSGListQuit4						: ARRAY [FIRST_MESSAGE..LAST_MESSAGE] OF BOOL;
+END_VAR
+
+VAR_GLOBAL PERSISTENT
+	test1									: INT;
+	test2									: INT;
+	test3									: INT;
+END_VAR
+
+VAR_GLOBAL
+	(*--------------------------*)
+	(*	Temperatura             *)
+	(*--------------------------*)
+	Temp_Camara_set			: DINT :=0;						(*0.01ºC*)
+	Temp_Tabuleiro_set		: DINT :=0;						(*0.01ºC*)
+	Temp_Extrusor_1_set		: DINT :=0;						(*0.1ºC*)
+	Temp_Extrusor_2_set		: DINT :=0;						(*0.1ºC*)
+
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

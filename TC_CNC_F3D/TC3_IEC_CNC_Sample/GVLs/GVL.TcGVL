@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <GVL Name="GVL" Id="{d3f927d3-df7a-41f5-a049-ca493ac1b901}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	Temp_Camara_in :INT;
+	Temp_Tabuleiro :INT;
+	Temp_Extrusor_1 :INT;
+	Temp_Chiller :INT;
+	Temp_Quadro :INT;
+	Temp_Cabos:INT;
+	Temp_8:INT;
+	Temp_MotorB:LREAL:=50.0;
+	Temp_PontoMovel:LREAL:=50.0;
+	gvl_bstate_start :BOOL:= FALSE;
+	gvl_sprogramname :STRING(500) := '';
+	gvl_currentState :DWORD;
+	gvl_automaticstop :BOOL :=FALSE;
+	gvl_automaticreset :BOOL :=FALSE;
+	gvl_automaticselected :BOOL :=FALSE;
+	gvl_bEnableTracking:BOOL:=FALSE;
+	gvl_plcAxisEnable:BOOL:=FALSE;
+	gvl_operationMode:STRING(100):='';
+	gvl_manualMode:BOOL;
+	gvl_automaticMode:BOOL;
+	gvl_machine_state:STRING(500):='';
+	gvl_blockcount:DINT:=0;
+	gvl_aquecimento_mesa:BOOL :=FALSE;
+	gvl_aquecimento_extrusor:BOOL :=FALSE;
+	gvl_manualmode_isactivated:BOOL :=FALSE;
+	gvl_manualmode_busy:BOOL :=FALSE;
+	gvl_currentMode:DWORD;
+	gvl_Manual_nOpMode:UINT;
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

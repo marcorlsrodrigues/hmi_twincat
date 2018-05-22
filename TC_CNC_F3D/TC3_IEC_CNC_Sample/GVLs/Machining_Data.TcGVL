@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4018.5">
+  <GVL Name="Machining_Data" Id="{03231454-d918-4033-9c7f-e37d9902600e}">
+    <Declaration><![CDATA[VAR_GLOBAL CONSTANT
+	(* General limits *)
+	MAX_TOOLS								: UINT := 50;
+	SystemToolNr							: INT := 30;		(* System Tool Number *)
+	
+	MAX_TIMER								: INT := 50;
+	MAX_M_FUNCTIONS						: UDINT := 200;
+	MAX_T_FUNCTIONS						: UDINT := 200;
+
+	(* BDE - Messages *)
+	BDE_MSG_1								: INT := 1;
+	BDE_MSG_2								: INT := 2;
+	BDE_MSG_3								: INT := 3;
+
+	(* BDE - Timer *)
+	BDE_TIMER_SUM							: INT := 1;
+	BDE_TIMER_CONTROL_ON					: INT := 2;
+	BDE_TIMER_AUTOMATIC					: INT := 3;
+	BDE_TIMER_ERROR						: INT := 4;
+
+	(* BDE - Counter *)
+	BDE_COUNTER_AUTO						: INT := 1;
+	BDE_COUNTER_PIECES					: INT := 2;
+END_VAR
+
+VAR_GLOBAL
+	(*--------------------------*)
+	(*	Machine data table       *)
+	(*--------------------------*)
+	PLCMParBool				: ARRAY[1..10] OF BOOL;
+	PLCMParInt				: ARRAY[1..50] OF INT;
+	PLCMParByte				: ARRAY[1..20] OF BYTE;
+	PLCMParDInt				: ARRAY[1..70] OF DINT;
+	PLCMParUSInt			: ARRAY[1..20] OF USINT;
+	PLCMParUInt				: ARRAY[1..20] OF UINT;
+	PLCMParUDInt			: ARRAY[1..20] OF UDINT;
+	PLCMParReal				: ARRAY[1..90] OF REAL;
+	PLCMParLReal			: ARRAY[1..90] OF LREAL;
+	PLCMParString			: ARRAY[1..50] OF STRING;
+	PLCMParTime				: ARRAY[1..50] OF TIME;
+
+	PLCMParList1			: ARRAY[1..100] OF LREAL;
+	PLCMParList2			: ARRAY[1..50] OF LREAL;
+	PLCMParList3			: ARRAY[1..50] OF LREAL;
+	PLCMParListString		: ARRAY[1..50] OF STRING;
+	PLCMParTimer			: ARRAY[1..50] OF TIME;
+END_VAR
+
+VAR_GLOBAL
+	(* Timer *)
+	PlcTimer					: ARRAY[1..MAX_TIMER] OF REAL;
+
+	(* General Machining data *)
+	MachineParam			: ARRAY[1..50] OF REAL;
+	TestBol					: ARRAY[1..50] OF BOOL;
+END_VAR
+]]></Declaration>
+  </GVL>
+</TcPlcObject>

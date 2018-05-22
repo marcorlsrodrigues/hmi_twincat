@@ -1,0 +1,180 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <POU Name="HLI_DoChannelMFunction" Id="{30ae9bbc-e327-48cd-9c95-543fb74593c1}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK HLI_DoChannelMFunction
+VAR_INPUT
+	nChan				: UDINT;		(* Channel number *)
+	nFuncNr			: UDINT;		(* Number of M-function *)
+	nArg				: DINT;		(* Argument of M-Function *)
+END_VAR
+VAR_OUTPUT
+	bBusy				: BOOL;
+END_VAR
+VAR
+	pChannel			: POINTER TO ST_CncChannel;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*     FB: HLI_DoChannelMFunction                            *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(* Author: MK                                                *)
+(*   Rev.: 1.1                                               *)
+(*   Date: 18.07.2002                                        *)
+(*       : 08.04.2005                                        *)
+(* ========================================================= *)
+
+
+bBusy := TRUE;
+
+IF nChan <= 0 OR gNrCh < nChan THEN			(* check for channel no *)
+	RETURN; (* e x i t *)
+END_IF
+
+
+pChannel := ADR(CncSystem.Channel[nChan]);
+
+(* Synch M-Functions *)
+IF nFuncNr >= 0 AND nFuncNr < MAX_M_FUNCTIONS THEN
+	IF pChannel^._M[nFuncNr] = FALSE THEN		(* M-Function not set *)
+		pChannel^.M[nFuncNr] := TRUE;				(* set M-Function *)
+		pChannel^._M[nFuncNr] := TRUE;			(* set acknowledge *)
+	ELSE
+		IF pChannel^.M[nFuncNr] = FALSE THEN	(* wait for quit *)
+			pChannel^._M[nFuncNr] := FALSE;		(* quit the ack *)
+			bBusy := FALSE;							(* quit *)
+		END_IF
+	END_IF
+END_IF
+
+
+CASE nFuncNr OF
+		(*Esperar pelo aquecimento*)
+	40:
+		IF (Temp_Camara_set=0 OR (IOs.Temp_Camara_out<Temp_Camara_set+100 AND IOs.Temp_Camara_out>Temp_Camara_set-100)) AND 
+		(Temp_Tabuleiro_set=0 OR (IOs.Temp_Tabuleiro<Temp_Tabuleiro_set+100 AND IOs.Temp_Tabuleiro>Temp_Tabuleiro_set-100))  AND
+		(Temp_Extrusor_1_set=0 OR (IOs.Temp_Extrusor_1<Temp_Extrusor_1_set+10 AND IOs.Temp_Extrusor_1>Temp_Extrusor_1_set-10)) THEN
+		
+			pChannel^.M[nFuncNr] := FALSE;
+			
+		END_IF
+
+		(*Definir temperatura câmara*)
+	41: 
+		Temp_Camara_set:=nArg;
+		pChannel^.M[nFuncNr] := FALSE;
+		
+		(*Definir temperatura câmara com espera*)
+	42:
+		Temp_Camara_set:=nArg;
+		
+	IF (IOs.Temp_Camara_out<Temp_Camara_set+100 AND IOs.Temp_Camara_out>Temp_Camara_set-100) OR (Temp_Camara_set=0 AND IOs.Temp_Camara_out<3000) THEN
+		pChannel^.M[nFuncNr] := FALSE;
+	END_IF
+	
+		(*Definir temperatura tabuleiro*)
+	51: 
+		Temp_Tabuleiro_set:=nArg;
+		pChannel^.M[nFuncNr] := FALSE;
+		
+		(*Definir temperatura tabuleiro com espera*)
+	52:
+		Temp_Tabuleiro_set:=nArg;
+		
+		IF Temp_Tabuleiro_set=0 THEN
+			IF (IOs.Temp_Tabuleiro<IOs.Temp_Camara_in) THEN
+				pChannel^.M[nFuncNr] := FALSE;
+			END_IF
+		ELSIF (IOs.Temp_Tabuleiro<Temp_Tabuleiro_set+100 AND IOs.Temp_Tabuleiro>Temp_Tabuleiro_set-100) THEN
+				pChannel^.M[nFuncNr] := FALSE;
+		END_IF
+		
+		(*Definir temperatura extrusor 1*)
+	61: 
+		Temp_Extrusor_1_set:=nArg;
+		pChannel^.M[nFuncNr] := FALSE;
+		
+		(*Definir temperatura extrusor 1 com espera*)
+	62:
+		Temp_Extrusor_1_set:=nArg;
+		
+		IF Temp_Extrusor_1_set=0 THEN
+			IF (IOs.Temp_Extrusor_1<IOs.Temp_Camara_in) THEN
+				pChannel^.M[nFuncNr] := FALSE;
+			END_IF
+			IF (IOs.Temp_Extrusor_1<Temp_Extrusor_1_set+100 AND IOs.Temp_Extrusor_1>Temp_Extrusor_1_set-100) THEN
+				pChannel^.M[nFuncNr] := FALSE;
+			END_IF
+		END_IF
+			
+END_CASE
+
+
+
+(* MOS *)
+(*
+IF nFuncNr >= 23 AND nFuncNr <= 24 THEN
+	bBusy := FALSE;
+END_IF
+*)
+
+
+(* Quit M0, M1, M2, M30 *)
+IF nFuncNr = 0 OR nFuncNr = 1 OR nFuncNr = 2 OR nFuncNr = 30 THEN
+	pChannel^.M[nFuncNr] := FALSE;
+	pChannel^._M[nFuncNr] := FALSE;
+	bBusy := FALSE;
+END_IF
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="HLI_DoChannelMFunction">
+      <LineId Id="3" Count="30" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="219" Count="0" />
+      <LineId Id="218" Count="0" />
+      <LineId Id="239" Count="2" />
+      <LineId Id="220" Count="0" />
+      <LineId Id="226" Count="0" />
+      <LineId Id="221" Count="0" />
+      <LineId Id="217" Count="0" />
+      <LineId Id="128" Count="3" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="132" Count="2" />
+      <LineId Id="204" Count="0" />
+      <LineId Id="157" Count="1" />
+      <LineId Id="161" Count="0" />
+      <LineId Id="175" Count="0" />
+      <LineId Id="139" Count="3" />
+      <LineId Id="202" Count="0" />
+      <LineId Id="143" Count="2" />
+      <LineId Id="200" Count="0" />
+      <LineId Id="189" Count="1" />
+      <LineId Id="193" Count="1" />
+      <LineId Id="191" Count="0" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="166" Count="0" />
+      <LineId Id="201" Count="0" />
+      <LineId Id="178" Count="3" />
+      <LineId Id="203" Count="0" />
+      <LineId Id="182" Count="2" />
+      <LineId Id="199" Count="0" />
+      <LineId Id="197" Count="0" />
+      <LineId Id="195" Count="1" />
+      <LineId Id="198" Count="0" />
+      <LineId Id="185" Count="2" />
+      <LineId Id="176" Count="0" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="35" Count="17" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

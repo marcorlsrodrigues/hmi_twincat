@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4018.5">
+  <POU Name="HLI_ChannelSetSuspendAxisOutput" Id="{0c39937d-dd4c-4625-8832-595649f258f8}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION HLI_ChannelSetSuspendAxisOutput : BOOL
+VAR_INPUT
+	nChan					: UDINT;			(* Number of channel *)
+	bSuspendAxis		: BOOL;
+END_VAR
+VAR
+	nHliChIdx			: UDINT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: HLI_ChannelSuspendAxisOutput                      *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(* Author: MK                                                *)
+(*   Date: 18.04.2003                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+nHliChIdx := nChan - 1;
+
+IF nChan <= 0 OR gNrCh < nChan OR			(* check for channel no *)
+	gpCh[nHliChIdx] = 0 THEN					(* check for zero pointer *)
+	HLI_ChannelSetSuspendAxisOutput := FALSE;
+	RETURN; (* e x i t *)
+END_IF
+
+gpCh[nHliChIdx]^.bahn_mc_control.suspend_axis_output.command_w := bSuspendAxis;
+
+HLI_ChannelSetSuspendAxisOutput := TRUE;
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

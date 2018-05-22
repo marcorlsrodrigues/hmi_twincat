@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4018.5">
+  <POU Name="HLI_ChannelModeReference" Id="{70d4fccd-cd90-4a70-b554-eaeb7e0f493d}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION HLI_ChannelModeReference : BOOL
+VAR_INPUT
+	nChan					: UDINT;			(* Number of channel *)
+	sRefPosString 		: STRING(HLI_IMCM_MODE_STATE_PARAM_STRL);	(* the referencing string *)
+	pUnit					: POINTER TO MC_CONTROL_MCM_MODE_STATE_UNIT;
+	pCommand				: POINTER TO HLI_PROC_TRANS_TO_MODE_STATE;
+	pChannel				: POINTER TO ST_CncChannel;
+END_VAR
+VAR
+	pString				: POINTER TO STRING(HLI_IMCM_MODE_STATE_PARAM_STRL);
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: HLI_ChannelModeReference                          *)
+(* --------------------------------------------------------- *)
+(*   Desc: switch channel to Reference mode / xxx            *)
+(* Author: MK                                                *)
+(*   Date: 18.07.2002                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+(************************************************************
+	RefPosString:
+	Element: parameter ( ASCII char set, length:256 character)
+
+	Additional possibility to parametrize homing.
+
+	If this STRING is empty, the default program
+	"rpf.nc" is used.
+
+	else by setting axis and G-code in terms of "G74
+	<axis_name_1><time_1> ...
+	<axis_name_2><time_2> ...
+	an individual homing can be used.
+*************************************************************)
+
+
+IF pChannel^.State.Selected THEN
+	pChannel^.State.Selected := FALSE;
+	pCommand^.to_mode := HLI_IMCM_REFERENCE_MODE;
+	pCommand^.to_state := HLI_IMCM_PROCESS_SELECTED;
+	pCommand^.channel_number := nChan;
+	pUnit^.command_semaphor_rw := TRUE;
+	ADSLOG(strMsg:='Reference selected', nDINT:=0, strArg:='');
+END_IF
+
+IF pChannel^.State.Ready THEN
+	pChannel^.State.Ready := FALSE;
+	pCommand^.to_mode := HLI_IMCM_REFERENCE_MODE;
+	pCommand^.to_state := HLI_IMCM_PROCESS_READY;
+	pCommand^.channel_number := nChan;
+	pString := ADR(pCommand^.parameter);
+	pUnit^.command_semaphor_rw := TRUE;
+	ADSLOG(strMsg:='MDI Mode ready', nDINT:=0, strArg := '');
+END_IF
+
+IF pChannel^.State.Start THEN
+	pChannel^.State.Start := FALSE;
+	pCommand^.to_mode := HLI_IMCM_REFERENCE_MODE;
+	pCommand^.to_state := HLI_IMCM_PROCESS_ACTIVE;
+	pCommand^.channel_number := nChan;
+	pString := ADR(pCommand^.parameter);
+	pString^ := sRefPosString;
+	pUnit^.command_semaphor_rw := TRUE;
+	ADSLOG(strMsg:='Programm %s reference is started', nDINT:=0, strArg:=sRefPosString);
+END_IF
+
+IF pChannel^.State.Stop THEN
+	pChannel^.State.Stop := FALSE;
+	pCommand^.to_mode := HLI_IMCM_REFERENCE_MODE;
+	pCommand^.to_state := HLI_IMCM_PROCESS_HOLD;
+	pCommand^.channel_number := nChan;
+	pUnit^.command_semaphor_rw := TRUE;
+	ADSLOG(strMsg:='Reference stop is selected', nDINT:=0, strArg:='');
+END_IF
+
+IF pChannel^.State.Reset THEN
+	pChannel^.State.Reset := FALSE;
+	pCommand^.to_mode := HLI_IMCM_REFERENCE_MODE;
+	pCommand^.to_state := HLI_IMCM_PROCESS_DESELECTED;
+	pCommand^.channel_number := nChan;
+	pUnit^.command_semaphor_rw := TRUE;
+	ADSLOG(strMsg:='Reference reset is selected', nDINT:=0, strArg:='');
+END_IF
+
+HLI_ChannelModeReference := TRUE;
+
+
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

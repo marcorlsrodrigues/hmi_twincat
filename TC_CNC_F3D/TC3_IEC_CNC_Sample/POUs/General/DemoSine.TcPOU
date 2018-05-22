@@ -1,0 +1,36 @@
+﻿<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.19">
+  <POU Name="DemoSine" Id="{dc581c8d-d061-4b4a-a4f1-0810dfb17c76}">
+    <Declaration><![CDATA[PROGRAM DemoSine
+VAR
+	X_Value		: REAL;
+	Y_Value		: REAL;
+	Y_ValueAbs	: REAL;
+
+	maxValue		: INT := 1000;
+	index			: INT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    PRG: DemoSine                                          *)
+(* --------------------------------------------------------- *)
+(*   Desc: Example, shows how to generate a sine             *)
+(* Author: MK                                                *)
+(*   Date: 21.12.2011                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+IF index >= maxValue THEN
+	index := 0;
+ELSE
+	index := index + 1;
+END_IF
+
+X_Value := INT_TO_REAL(index)/INT_TO_REAL(maxValue) * 2.0 * 3.1415;
+Y_Value := SIN(X_Value) * 100.0;
+Y_ValueAbs := (Y_Value+100.0)/2.0;
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

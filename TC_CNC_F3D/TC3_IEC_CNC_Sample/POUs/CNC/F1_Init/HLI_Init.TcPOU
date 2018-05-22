@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?><TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.7"><POU Name="HLI_Init" Id="{53a8f2d0-fd3a-4dce-b66c-1d8e09a21938}"><Declaration><![CDATA[PROGRAM HLI_Init
+VAR
+	HliInterface		: MCV_HliInterface;
+	tool					: CncToolControl;
+	MessageOutput		: R_TRIG;
+	
+	bFirstCycle			: BOOL := TRUE;
+	bInitHLI				: BOOL;
+END_VAR
+]]></Declaration><Implementation><ST><![CDATA[(* ========================================================= *)
+(*    PRG: HLI_Init                                          *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(* Author: MK                                                *)
+(*   Date: 21.12.2011                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+(* Init Tool Configuration structures *)
+tool.HandleExternalToolData();
+tool.SetToolData();
+
+
+IF NOT bInitHLI THEN
+	HliInterface();
+	IF HliInterface.Initialized = TRUE THEN
+		bInitHLI := TRUE;
+	END_IF
+END_IF
+
+IF HliInterface.Initialized = TRUE AND HliInterface.Error = FALSE THEN
+	(* User initialization, used during start of PLC once *)
+	IF CncSystem.bUserInitDone = FALSE THEN
+		(* Initialisierungen auf dem HLI-Interface *)
+		CncSystem.bUserInitDone := HLI_UserInitialisation();
+
+		ADSLOG(strMsg:='High Level Interfaces initialized: %s', nDINT:=0, strArg:='');
+	END_IF
+
+	(* initialization finished *)
+	CNCSystem.bHLIInit := TRUE;
+ELSE
+	MessageOutput(CLK:=HliInterface.Error);
+	IF HliInterface.Error = TRUE	THEN
+		(* Fehler beim Initialisieren des HLI *)
+		IF MessageOutput.Q THEN
+			ADSLOGDINT(	msgCtrlMask := ADSLOG_MSGTYPE_ERROR OR
+												ADSLOG_MSGTYPE_MSGBOX OR
+												ADSLOG_MSGTYPE_LOG,
+							msgFmtStr := 'Fehler beim Initialisieren des HLI-Interfaces Fehlercode: %d',
+							dintArg := HliInterface.ErrorID);
+		END_IF
+		CNCSystem.nInitErrorId := HliInterface.ErrorID;
+		CNCSystem.bInitError := TRUE;
+	END_IF;
+END_IF
+]]></ST></Implementation><ObjectProperties /></POU></TcPlcObject>

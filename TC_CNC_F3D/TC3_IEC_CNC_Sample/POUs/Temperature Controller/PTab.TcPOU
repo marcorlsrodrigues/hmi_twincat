@@ -1,0 +1,78 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <POU Name="PTab" Id="{708b08b8-5791-45d7-bc98-75ab79ca618b}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM PTab
+
+VAR
+	fSetpointValue					: FLOAT;
+	fActualValue					: FLOAT;
+	fManSyncValue					: FLOAT;
+	bSync							: BOOL;
+
+	fOut							: FLOAT;
+	bHold							: BOOL;
+
+	eMode							: E_CTRL_MODE;
+	stCTRL_PID_PARAMS				: ST_CTRL_PID_PARAMS;
+
+	eErrorId						: E_CTRL_ERRORCODES;
+	bError							: BOOL;
+	bARWactive						: BOOL;
+
+	fbCTRL_PID						: FB_CTRL_PID;
+
+	bInit							: BOOL	:= TRUE;
+	fbTON							: TON;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF bInit
+THEN
+	(* Init parameter struct *)
+	stCTRL_PID_PARAMS.tCtrlCycleTime	:= T#10MS;
+	stCTRL_PID_PARAMS.tTaskCycleTime	:= T#10MS;
+	stCTRL_PID_PARAMS.fKp				:= 0.15162;			(* proportional gain Kp		*)
+	stCTRL_PID_PARAMS.tTn				:= T#1338.57S;		(* integral action time Tn	*)
+	stCTRL_PID_PARAMS.tTv				:= T#100S;		(* derivative action time Tv*)
+	stCTRL_PID_PARAMS.tTd				:= T#21.9449S;		(* damping time	Td			*)
+	stCTRL_PID_PARAMS.fOutMaxLimit		:= 100;			(* maximum output limit		*)
+	stCTRL_PID_PARAMS.fOutMinLimit		:= 0;			(* minimum output limit		*)
+
+	(* ACTIVE --> normal operation *)
+	eMode								:= eCTRL_MODE_ACTIVE;
+
+	(* Reset init flag *)
+	bInit								:= FALSE;
+END_IF
+
+	(* Call controller function block *)
+fbCTRL_PID(		fSetpointValue			:= Temp_Tabuleiro_set,
+					fActualValue		:= IOs.Temp_Tabuleiro,
+					fManSyncValue		:= fManSyncValue,
+					bSync				:= bSync,
+					eMode				:= eMode,
+					bHold				:= bHold,
+					stParams			:= stCTRL_PID_PARAMS,
+					fOut				=> fOut,
+					bARWactive			=> bARWactive,
+					eErrorId			=> eErrorId,
+					bError				=> bError
+				);
+IF bError=FALSE THEN	
+		(* Call PWM function  *)
+	PTab_Out(fPwmInput:=fOut);
+ELSE
+	PTab_Out(fPwmInput:=0);
+	(*Escrever o erro para a HMI*)
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="PTab">
+      <LineId Id="473" Count="30" />
+      <LineId Id="529" Count="0" />
+      <LineId Id="534" Count="0" />
+      <LineId Id="530" Count="0" />
+      <LineId Id="557" Count="2" />
+      <LineId Id="527" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

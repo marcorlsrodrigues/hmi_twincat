@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <POU Name="PCamara_Out" Id="{bf076f0a-2659-49bf-b02e-fc803dcb8cc9}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM PCamara_Out
+
+VAR_INPUT
+	fIn								: FLOAT;	
+END_VAR
+
+VAR
+	bInit							: BOOL	:= TRUE;
+	FB_CTRL_LIMIT : FB_CTRL_LIMITER;
+	stParams     	: ST_CTRL_LIMITER_PARAMS;
+	eMode			: E_CTRL_MODE;
+	Init			: BOOL	:= TRUE;
+	fOut			: FLOAT;
+	eErrorId		: E_CTRL_ERRORCODES;
+	bError 			: BOOL;
+	
+	aux 			: LREAL;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF bInit THEN
+	(* Init parameter struct *)
+	stParams.tCtrlCycleTime   := T#10MS; 
+  	stParams.tTaskCycleTime   := T#10MS; 
+  	stParams.fMinOutput       :=0;
+  	stParams.fMaxOutput       :=32767;
+
+	(* ACTIVE --> normal operation *)
+	eMode									:= eCTRL_MODE_ACTIVE;
+
+	(* Reset the init flag *)
+	bInit									:= FALSE;
+END_IF
+
+	(* Call function block *)
+IF IOS.Temp_Camara_in>=17500 THEN
+	aux:=0;
+ELSE
+	FB_CTRL_LIMIT(
+		fIn:= (32767*fIn)/100, 
+		fOut=>aux, 
+		bMinLimit=>, 
+		bMaxLimit=>, 
+		eErrorId=>eErrorId , 
+		bError=>bError, 
+		stParams:=stParams );
+END_IF
+
+	(* Output sign   *)
+IOS.A_Out_Aque_Ar:=LREAL_TO_UINT(aux);
+]]></ST>
+    </Implementation>
+    <LineIds Name="PCamara_Out">
+      <LineId Id="153" Count="29" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <POU Name="CncHFunctions" Id="{ab541539-e7bf-42bd-8ae8-1d87f6d822e1}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK CncHFunctions
+VAR_INPUT
+	nFuncNr				: UDINT;		(* Number of H-function *)
+	nArg				: DINT;		(* Argument of H-Function *)
+END_VAR
+VAR
+	argument52 :DINT :=0;
+	argument522 :DINT :=0;
+END_VAR
+VAR_OUTPUT
+	Busy :BOOL;
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: CncHFunctions                                     *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(* Author: JRM                                               *)
+(*   Date: 20.12.2017                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+Busy:= TRUE;
+
+CASE nFuncNr OF
+	53:
+		CASE nArg OF
+			0: IOs.IO_Out_Vent_Quadro1:=FALSE;
+				IOs.IO_Out_Vent_Quadro2:=FALSE;
+				
+			1: IOs.IO_Out_Vent_Quadro1:=TRUE;
+				IOs.IO_Out_Vent_Quadro2:=FALSE;
+				
+			2: IOs.IO_Out_Vent_Quadro1:=TRUE;
+				IOs.IO_Out_Vent_Quadro2:=TRUE;
+		END_CASE
+		Busy:=FALSE;
+	
+
+		
+END_CASE
+]]></ST>
+    </Implementation>
+    <LineIds Name="CncHFunctions">
+      <LineId Id="3" Count="8" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="57" Count="1" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="61" Count="1" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="72" Count="1" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

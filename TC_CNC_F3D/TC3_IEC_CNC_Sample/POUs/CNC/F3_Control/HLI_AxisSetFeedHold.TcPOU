@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4018.5">
+  <POU Name="HLI_AxisSetFeedHold" Id="{167ee421-57ac-4247-af3a-377e1cd385b3}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION HLI_AxisSetFeedHold : BOOL
+VAR_INPUT
+	Axis					: UDINT;
+	TorquePermission	: BOOL;
+	Feedhold				: BOOL;
+	DriveOn				: BOOL;
+END_VAR
+VAR
+	nHliAxIdx			: UDINT;		(* Index of axis specific HLI area *)
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: HLI_AxisSetFeedHold                               *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(* Author: MK                                                *)
+(*   Date: 21.12.2011                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+nHliAxIdx := Axis - 1;
+
+IF Axis < 1	OR gNrAx < Axis			(* check for axis no *)
+	OR gpAx[nHliAxIdx] = 0 THEN		(* check for zero pointer *)
+	HLI_AxisSetFeedHold := FALSE;
+	RETURN; (* e x i t *)
+END_IF
+
+(* set regulation and feed *)
+gpAx[nHliAxIdx]^.lr_mc_control.torque_permission.command_w := TorquePermission;
+gpAx[nHliAxIdx]^.lr_mc_control.release_feedhold.command_w := Feedhold;
+gpAx[nHliAxIdx]^.lr_mc_control.drive_on.command_w := DriveOn;
+
+HLI_AxisSetFeedHold := TRUE;
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

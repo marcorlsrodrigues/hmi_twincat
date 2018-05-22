@@ -1,0 +1,110 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <POU Name="PRG_ManualModeG201" Id="{aa808a94-7b4c-43ec-aef8-44ee249b1346}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM PRG_ManualModeG201
+VAR_INPUT
+	nChan						: UDINT;		(* starts with 1, 2,... *)
+END_VAR
+VAR
+	nAxis						: UINT := 3;	(* X=1; Y=2; Z=3 *)
+	bOpModeAuto				: BOOL;		(* activates, deactivates operation *) 
+	bManualIsOn				: BOOL;
+	bEndOfManualMode		: BOOL;
+	bManualModeErr			: BOOL;		(* inicates error *)
+
+	AxisManualModeG201	: HLI_AxisManualMode;
+	manualModeParam		: ST_ManualModeParam;
+	pChannel					: POINTER TO HIGH_LEVEL_INTERFACE_CH;  		
+	nHliChIdx				: UDINT;
+	fbRTrig					: R_TRIG;
+	fbFTrig					: F_TRIG;
+	hbStateAxis				: DINT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    PRG: PRG_ManualModeG201                                *)
+(* --------------------------------------------------------- *)
+(*   Desc: Axis manual mode with parallel interpolation G201 *)
+(* Author: MK                                                *)
+(*   Date: 12.05.2016                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+nHliChIdx := nChan - 1;
+
+IF nChan <= 0 OR gNrCh < nChan OR			(* check for channel no *)
+	gpCh[nHliChIdx] = 0 THEN					(* check for zero pointer *)
+	RETURN; (* e x i t *)
+END_IF
+
+(* axis number must be 1, 2, 3,... *)
+IF nAxis < 1 THEN
+	RETURN;
+END_IF
+
+(* activates operation only in automatic mode *)
+bOpModeAuto := (HLI_ChannelGetMode(nChan:=nChan) = HLI_IMCM_AUTOMATIC_MODE);
+
+(* This enables automatically the axis manual movement *)
+pChannel := gpCh[nHliChIdx];
+hbStateAxis := pChannel^.bahn_state.coord_r[nAxis - 1].hb_display_r.state;	(* Status of the axis | 0=Inactive, 1=Ready, 2=Active *)
+
+fbRTrig(CLK := (hbStateAxis<>0) AND bOpModeAuto);
+fbFTrig(CLK := (hbStateAxis<>0) AND bOpModeAuto);
+
+IF fbRTrig.Q OR bManualIsOn THEN
+	IF fbRTrig.Q THEN			(* activation *)
+		bManualIsOn := TRUE;
+		bEndOfManualMode := FALSE;
+	ELSIF fbFTrig.Q THEN		(* deactivation *)
+		bEndOfManualMode := TRUE;
+	END_IF
+	
+	manualModeParam.nOpMode := UDINT_TO_UINT(HLI_HB_MODE_HR);
+	manualModeParam.nLogAxisNr := nAxis;		// PlcManualModeSelectedAxis;
+	manualModeParam.nControlElement := 1;
+	manualModeParam.nHandwheelNr := 0;
+	manualModeParam.nHandwheelIncs := PlcManualModeHandWheelIncs;
+	manualModeParam.nHandwheelRes := PlcManualModeHandWheelRes; 
+	manualModeParam.nTipSpeed := PlcManualModeSpeed;
+	manualModeParam.nJogSpeed := PlcManualModeSpeed;
+	manualModeParam.nJogDistance := PlcManualModeIncrements;
+
+	(* manual mode keypress *)
+	manualModeParam.bKeyPos := PlcManualModeRightKey;
+	manualModeParam.bKeyNeg := PlcManualModeLeftKey;
+	manualModeParam.bKeyRapid := PlcManualModeRapidFeedKey;
+
+	
+	AxisManualModeG201(nChan			:= nChan,
+							sProgramName	:= '',
+							bEndManual		:= bEndOfManualMode,
+							ManualModeParam:= manualModeParam, 
+							nKeyUnitIdx		:= 0,
+							bManualModeHMI	:= FALSE,
+							bReset			:= FALSE,
+							bG201				:= TRUE);
+							
+	IF AxisManualModeG201.Busy = FALSE THEN
+		AxisManualModeG201.bG201 := FALSE;
+		bEndOfManualMode := FALSE;
+		bManualIsOn := FALSE;
+	END_IF
+	bManualModeErr := AxisManualModeG201.Err;
+END_IF
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="PRG_ManualModeG201">
+      <LineId Id="3" Count="15" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="97" Count="1" />
+      <LineId Id="100" Count="1" />
+      <LineId Id="90" Count="1" />
+      <LineId Id="19" Count="12" />
+      <LineId Id="33" Count="36" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.6">
+  <DUT Name="ST_HmiData" Id="{472c3c72-521f-4e5f-aa81-423d47f8be9c}">
+    <Declaration><![CDATA[TYPE ST_HmiData :
+STRUCT
+	NumberOfChannels				: UDINT;
+	Channel							: ARRAY[0..5] OF ST_HmiChannel;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

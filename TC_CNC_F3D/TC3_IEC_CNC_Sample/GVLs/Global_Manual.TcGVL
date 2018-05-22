@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <GVL Name="Global_Manual" Id="{249ed67c-e5b4-4aac-ad1a-5028c6e86d56}">
+    <Declaration><![CDATA[VAR_GLOBAL
+	(***********************************
+	 * Declaration for 
+	 * Manual functions
+	 ************************************)
+	PortalInfo				: STRING;
+	PortalOn					: ARRAY[1..20] OF BOOL;
+	PortalOff				: ARRAY[1..20] OF BOOL;
+	PortalStatus			: ARRAY[1..20] OF BYTE;
+
+	PortalSetValueLeft	: ARRAY[1..20] OF STRING;
+	PortalActValueLeft	: ARRAY[1..20] OF STRING;
+	PortalSetValueRight	: ARRAY[1..20] OF STRING;
+	PortalActValueRight	: ARRAY[1..20] OF STRING;
+
+	SchweissenInfo			: STRING;
+	SchweissenOn			: ARRAY[1..20] OF BOOL;
+	SchweissenOff			: ARRAY[1..20] OF BOOL;
+	SchweissenStatus		: ARRAY[1..20] OF BYTE;
+
+	WerkzeugInfo			: STRING;
+	WerkzeugOn				: ARRAY[1..20] OF BOOL;
+	WerkzeugOff				: ARRAY[1..20] OF BOOL;
+	WerkzeugStatus			: ARRAY[1..20] OF BYTE;
+	
+
+END_VAR
+]]></Declaration>
+  </GVL>
+</TcPlcObject>

@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4018.5">
+  <POU Name="HLI_ChannelGetStatusInfo" Id="{a38a1fa5-d4b1-4af9-be40-ea48159e4e78}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION HLI_ChannelGetStatusInfo : BOOL
+VAR_INPUT
+	nChan					: UDINT;			(* Number of channel *)
+END_VAR
+VAR
+	pChannel				: POINTER TO ST_CNCChannel;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: HLI_GetStatusInfo                                 *)
+(* --------------------------------------------------------- *)
+(*   Desc: Status Info from the HLI Interface                *)
+(* Author: MK                                                *)
+(*   Date: 18.07.2002                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+pChannel := ADR(CncSystem.Channel[nChan]);
+pChannel^.ActMode := HLI_ChannelGetMode(nChan:=nChan);
+pChannel^.ActState := HLI_ChannelGetState(nChan:=nChan);
+
+(* Translate mode *)
+CASE pChannel^.ActMode OF
+	HLI_IMCM_MODE:							pChannel^.ActModeString := 'Mode';
+	HLI_IMCM_STANDBY_MODE:				pChannel^.ActModeString := 'StandbyMode';
+	HLI_IMCM_AUTOMATIC_MODE:			pChannel^.ActModeString := 'AutomaticMode';
+	HLI_IMCM_MDI_MODE:					pChannel^.ActModeString := 'MDIMode';
+	HLI_IMCM_MANUAL_MODE:				pChannel^.ActModeString := 'ManualMode';
+	HLI_IMCM_REFERENCE_MODE:			pChannel^.ActModeString := 'ReferenceMode';
+ELSE
+	pChannel^.ActModeString := '---';
+END_CASE;
+
+(* Translate state *)
+CASE pChannel^.ActState OF
+	HLI_IMCM_PROCESS_DESELECTED:		pChannel^.ActStateString := 'Deselected';
+	HLI_IMCM_PROCESS_SELECTED:			pChannel^.ActStateString := 'Selected';
+	HLI_IMCM_PROCESS_READY:				pChannel^.ActStateString := 'Ready';
+	HLI_IMCM_PROCESS_ACTIVE:			pChannel^.ActStateString := 'Active';
+	HLI_IMCM_PROCESS_HOLD:				pChannel^.ActStateString := 'Hold';
+	HLI_IMCM_PROCESS_ERROR:				pChannel^.ActStateString := 'Error';
+	HLI_IMCM_PROCESS_SELECTING:		pChannel^.ActStateString := 'Selecting';
+	HLI_IMCM_PROCESS_DESELECTING:		pChannel^.ActStateString := 'Deselecting';
+	HLI_IMCM_PROCESS_PREPARING:		pChannel^.ActStateString := 'Preparing';
+	HLI_IMCM_PROCESS_CLEARING:			pChannel^.ActStateString := 'Clearing';
+	HLI_IMCM_PROCESS_STARTING:			pChannel^.ActStateString := 'Starting';
+	HLI_IMCM_PROCESS_ABORTING:			pChannel^.ActStateString := 'Aborting';
+	HLI_IMCM_PROCESS_STOPPING:			pChannel^.ActStateString := 'Stopping';
+	HLI_IMCM_PROCESS_RESUMING:			pChannel^.ActStateString := 'Resuming';
+	HLI_IMCM_PROCESS_RESETTING:		pChannel^.ActStateString := 'Resetting';
+	HLI_IMCM_PROCESS_FINISHING:		pChannel^.ActStateString := 'Finishing';
+ELSE
+	pChannel^.ActStateString := '---';
+END_CASE;
+
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

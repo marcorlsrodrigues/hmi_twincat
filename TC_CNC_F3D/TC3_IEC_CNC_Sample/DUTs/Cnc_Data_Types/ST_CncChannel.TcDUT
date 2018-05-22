@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <DUT Name="ST_CncChannel" Id="{82e90855-6f1d-4244-b73c-ba57c1d3b43e}">
+    <Declaration><![CDATA[TYPE ST_CncChannel :
+STRUCT
+	Mode					: ST_OpModes;									(* Operation Mode *)
+	State					: ST_OpStates;									(* Operation States *)
+
+	ActMode				: UDINT;											(* Selected Mode *)
+	ActModeString		: STRING;										(* Selected Mode as string *)
+	ActState				: UDINT;											(* Selected State *)
+	ActStateString		: STRING;										(* Selected State as string *)
+
+	ActDistance			: LREAL;											(* Block Search : Act. Distance *)
+	ActBlockCount  	: DINT;											(* Block Search : Act. Block Count *)
+
+	M						: ARRAY [0..MAX_M_FUNCTIONS] OF BOOL;	(* M-Functions *)
+	
+	
+	_M						: ARRAY [0..MAX_M_FUNCTIONS] OF BOOL;	(* only internal, quit M-Functions *)
+	M_Argument			: ARRAY [0..MAX_M_FUNCTIONS] OF DINT;	(* Additional M-Function parameter *)
+
+	H						: ARRAY [1..MAX_M_FUNCTIONS] OF BOOL;	(* H-Functions *)
+	_H						: ARRAY [1..MAX_M_FUNCTIONS] OF BOOL;	(* only internal, quit H-Functions *)
+	H_Argument			: ARRAY [1..MAX_M_FUNCTIONS] OF DINT;	(* Additional H-Function parameter *)
+
+	T						: ARRAY [1..MAX_T_FUNCTIONS] OF BOOL;	(* T-Functions *)
+	
+	ProcessStartTime	: DT;												(* Process start time *)
+	ProcessEndTime		: DT;												(* Process end time *)
+	ProcessRunning		: BOOL;											(* Indicates that the process is running *)
+	Error					: BOOL;											(* Fehlerflag des Kanals *)
+	ErrorId				: UDINT;											(* FehlerId des Kanals *)
+	ErrorMask			: HLI_ERROR_MASKE;							(* Informs the user about the error location in the cnc file *)
+
+	Message				: STRING(HLI_MSG_CONTENT_STRL);			(* Message from NC program to PLC *)
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

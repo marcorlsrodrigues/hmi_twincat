@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.38">
+  <DUT Name="ST_SyntaxCheck" Id="{cf3f7200-d733-4ed7-a5ee-20611535c996}">
+    <Declaration><![CDATA[TYPE ST_SyntaxCheck :
+STRUCT
+   (* SyntaxCheck *)
+   nType          : INT;	(* 
+										0x0000 ISG_STANDARD Normal mode
+										0x0001 SV Block search
+										0x0002 SOLLKON Offline Simulation with output of setpoint data
+										0x0802 SOLLKON Offline Simulation without output of setpoint data
+										0x0004 ON_LINE Simulation online visualisation
+										0x0008 SYNCHK Simulation syntax check
+										0x0010 PROD_TIME Simulation production time computation
+										0x0020 ONLINE_PROD_TIME Simulation online production time computation
+										0x0040 MACHINE_LOCK Dry run without axis movement
+										0x0080 TECHNO_FILTER Dry run TECHNO filter
+										0x0100 KIN_TRAFO_OFF Overwrites automatic enabling for kinematic transformations by a characteristic parameter defined in SDA_MDS (sda_mds*.lis).
+									*)
+
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

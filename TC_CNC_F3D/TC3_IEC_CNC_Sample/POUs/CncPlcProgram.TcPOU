@@ -1,0 +1,358 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <POU Name="CncPlcProgram" Id="{e070a9f3-4b2a-4b46-bfa0-15e9cec8f40f}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM CncPlcProgram
+VAR
+	CncChannel1					: HLI_CncChannel;
+	CncChannel2					: HLI_CncChannel;
+	BlockSearch_Channel1		: HLI_ChannelBlockSearch;
+	//BlockSearch_Channel2		: HLI_ChannelBlockSearch;
+	HLI_ChannelGetMessage1	: HLI_ChannelGetMessage;
+	HLI_ChannelGetMessage2	: HLI_ChannelGetMessage;
+	manualModeParam			: ARRAY[0..AXIS_MANUAL_KEYUNIT_MAX] OF ST_ManualModeParam;
+
+	nChan							: UDINT;
+	nAxisIdx						: UINT;
+	bEnableTracking			: BOOL;
+
+	RT_HomingOn					: R_TRIG;
+
+	bReferenceCam				: BOOL;
+
+	bSuspendAxisOutputChan1 : BOOL;
+	bSuspendAxisOutputChan2 : BOOL;
+
+	val1							: UDINT;
+	val2							: UDINT;
+	val3							: UDINT;
+
+	ErrorHandler				: ARRAY [1 .. HLI_SYS_AX_MAX] OF ChannelError;  (* one error handler per channel *)
+	fbClearEvents				: ADSCLEAREVENTS;
+	EventMode					: E_TcEventClearModes:=TCEVENTLOGIOFFS_CLEARALL;
+	ClearEvent					: BOOL;
+	EventFehler					: BOOL;
+	bClear						: BOOL := FALSE;
+
+	bDummy						: BOOL;
+	messageChannel1			: STRING(HLI_MSG_CONTENT_STRL) := '';
+	R_TrigWatchdogMessage	: R_TRIG;
+	
+	cncplcprogram_manualMode:BOOL;
+	cncplcprogram_automaticMode:BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    PRG: CncPlcProgram                                     *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(* Author: MK                                                *)
+(*   Date: 21.12.2011                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+(* ---------------------------------------------- *)
+(* ------- PLC part for the CNC ----------------- *)
+(* ---------------------------------------------- *)
+
+BDEControlOn := TRUE;
+
+(* Enable axis *)
+//CncAxisEnable(bEnable:=PLCAxisEnable);
+
+CncAxisEnable(bEnable:=GVL.gvl_bEnableTracking);
+
+
+(* tracking operation (follow up) on / off *)
+//bEnableTracking := PLCAxisEnable; //AND (HLI_ChannelGetState(nChan:=1) <> HLI_IMCM_PROCESS_ERROR);
+
+bEnableTracking := GVL.gvl_bEnableTracking; 
+
+FOR nAxisIdx := 1 TO UDINT_TO_UINT(gNrAx) DO
+	HLI_AxisSetTrackingOperation(nAxisNr:=nAxisIdx, bPLCAxisEnable:=bEnableTracking);
+END_FOR
+
+
+(* ReferenceCam *)
+//HLI_AxisSetReferenceCam(Axis:=1, bReferenceCam:=bReferenceCam);
+//HLI_AxisSetReferenceCam(Axis:=2, bReferenceCam:=bReferenceCam);
+//HLI_AxisSetReferenceCam(Axis:=3, bReferenceCam:=bReferenceCam);
+(*
+HLI_AxisSetReferenceCam(Axis:=1, bReferenceCam:=IOs.IO_In_X1);
+HLI_AxisSetReferenceCam(Axis:=2, bReferenceCam:=IOs.IO_In_X2);
+HLI_AxisSetReferenceCam(Axis:=3, bReferenceCam:=IOs.IO_In_Y);
+HLI_AxisSetReferenceCam(Axis:=4, bReferenceCam:=IOs.IO_In_Z1);
+HLI_AxisSetReferenceCam(Axis:=5, bReferenceCam:=IOs.IO_In_Z2);
+HLI_AxisSetReferenceCam(Axis:=6, bReferenceCam:=IOs.IO_In_B);*)
+
+HLI_AxisSetReferenceCam(Axis:=1, bReferenceCam:=IOs.IO_In_X1);
+HLI_AxisSetReferenceCam(Axis:=2, bReferenceCam:=IOs.IO_In_X2);
+HLI_AxisSetReferenceCam(Axis:=3, bReferenceCam:=IOs.IO_In_Y);
+HLI_AxisSetReferenceCam(Axis:=4, bReferenceCam:=IOs.IO_In_Z1);
+HLI_AxisSetReferenceCam(Axis:=8, bReferenceCam:=IOs.IO_In_Z2);
+HLI_AxisSetReferenceCam(Axis:=5, bReferenceCam:=IOs.IO_In_B);
+
+(* Channel Override *)
+(*PLCFeedOverride := 100;*)
+PLCFeedOverride := PLCFeedOverride2;
+PLCFeedOverride := 100;
+HLI_ChannelSetOverride(nChan:=1, nOverride:=PLCFeedOverride*10);
+HLI_ChannelSetOverride(nChan:=2, nOverride:=1000);
+
+
+(* Messages from the channel *)
+HLI_ChannelGetMessage1(nChan:=1, bExecute:=TRUE, bShowDlg:=TRUE);
+
+(* get variables *)
+(*val1 := GetVEChannelValue(nChan:=1, nVEIndex:=0, bGlobal:=TRUE);
+val2 := GetVEChannelValue(nChan:=1, nVEIndex:=1, bGlobal:=TRUE);
+*)
+
+// MK check
+(*
+val1 := GetVEChannelValue(nChan:=1, nVEIndex:=2, bGlobal:=TRUE);
+val2 := GetVEChannelValue(nChan:=1, nVEIndex:=3, bGlobal:=TRUE);
+val3 := GetVEChannelValue(nChan:=1, nVEIndex:=4, bGlobal:=TRUE);
+*)
+
+(* set variables *)
+(*SetVEChannelValue(nChan:=1, nVEIndex:=0, nVal:=2234, bGlobal:=TRUE); *)
+
+
+(* Common loop for cnc error handling *)
+FOR nChan := 1 TO gNrCh DO
+	(* Error handling *)
+	ErrorHandler[nChan](ChannelNr:=UDINT_TO_UINT(nChan));
+
+	(* Enable watchdog for real machines *)
+	(*
+	SetPLCAlive(nChan);
+	R_TrigWatchdogMessage(CLK := (CheckCNCAlive(nChan) = 0));
+	IF R_TrigWatchdogMessage.Q THEN
+		ADSLOGSTR(msgCtrlMask	:= ADSLOG_MSGTYPE_ERROR OR ADSLOG_MSGTYPE_MSGBOX OR ADSLOG_MSGTYPE_LOG,
+		 			 msgFmtStr		:= 'PLC detects CNC not alive: %s',
+		 			 strArg			:= 'channel x');
+	END_IF
+	*)
+END_FOR
+
+
+(*fbClearEvents(NetId := "", bClear := klaus, iMode := EventMode, tTimeout := t#1s);*)
+fbClearEvents.NETID := '';	(* Local Computer *)
+fbClearEvents.bClear:= bClear;
+fbClearEvents.iMode:= EventMode;
+fbClearEvents.tTimeout:= t#10s;
+
+
+(* ---------------------------------------------- *)
+(* ----------- Channel 1 ------------------------ *)
+(* ---------------------------------------------- *)
+
+nChan := 1;
+
+(*  Suspend Channel Axis ->"jog of path" *)
+HLI_ChannelSetSuspendAxisOutput(nChan:=nChan, bSuspendAxis:=bSuspendAxisOutputChan1);
+bSuspendAxisOutputChan1 := FALSE;
+
+
+(* manual mode over PLC *)
+IF PlcManualModeSelectedAxis = 0 THEN
+	PlcManualModeSelectedAxis := 1;		(* default axis *)
+END_IF
+(*MRODRIGUES*)
+(*manualModeParam[0].nOpMode := PlcManualModeOpMode;*)
+manualModeParam[0].nOpMode := GVL.gvl_Manual_nOpMode;
+manualModeParam[0].nLogAxisNr := PlcManualModeSelectedAxis;
+manualModeParam[0].nControlElement := 1;
+manualModeParam[0].nHandwheelNr := 0;
+manualModeParam[0].nHandwheelIncs := PlcManualModeHandWheelIncs;
+manualModeParam[0].nHandwheelRes := PlcManualModeHandWheelRes; 
+manualModeParam[0].nTipSpeed := PlcManualModeSpeed;
+manualModeParam[0].nJogSpeed := PlcManualModeSpeed;
+manualModeParam[0].nJogDistance := PlcManualModeIncrements;
+(* manual mode keypress *)
+manualModeParam[0].bKeyPos := PlcManualModeRightKey;
+manualModeParam[0].bKeyNeg := PlcManualModeLeftKey;
+manualModeParam[0].bKeyRapid := PlcManualModeRapidFeedKey;
+
+(*
+(* manual mode over PLC *)
+manualModeParam[1].nOpMode := PlcManualModeOpMode;
+manualModeParam[1].nLogAxisNr := 2;		(* second axis e.g. 2 *)
+manualModeParam[1].nControlElement := 2;
+manualModeParam[1].nHandwheelNr := 0;
+manualModeParam[1].nHandwheelIncs := PlcManualModeHandWheelIncs;
+manualModeParam[1].nHandwheelRes := PlcManualModeHandWheelRes; 
+manualModeParam[1].nTipSpeed := PlcManualModeSpeed;
+manualModeParam[1].nJogSpeed := PlcManualModeSpeed;
+manualModeParam[1].nJogDistance := PlcManualModeIncrements;
+(* manual mode keypress *)
+manualModeParam[1].bKeyPos := PlcManualModeRightKey;
+manualModeParam[1].bKeyNeg := PlcManualModeLeftKey;
+manualModeParam[1].bKeyRapid := PlcManualModeRapidFeedKey;
+
+
+(* manual mode over PLC *)
+manualModeParam[2].nOpMode := PlcManualModeOpMode;
+manualModeParam[2].nLogAxisNr := 3;		(* second axis e.g. 3 *)
+manualModeParam[2].nControlElement := 3;
+manualModeParam[2].nHandwheelNr := 0;
+manualModeParam[2].nHandwheelIncs := PlcManualModeHandWheelIncs;
+manualModeParam[2].nHandwheelRes := PlcManualModeHandWheelRes; 
+manualModeParam[2].nTipSpeed := PlcManualModeSpeed;
+manualModeParam[2].nJogSpeed := PlcManualModeSpeed;
+manualModeParam[2].nJogDistance := PlcManualModeIncrements;
+(* manual mode keypress *)
+manualModeParam[2].bKeyPos := PlcManualModeRightKey;
+manualModeParam[2].bKeyNeg := PlcManualModeLeftKey;
+manualModeParam[2].bKeyRapid := PlcManualModeRapidFeedKey;
+*)
+
+(* MRODRIGUES
+CncChannel1(nChan					:= nChan,
+				(* Operation Mode *)
+				bModeStandby		:= PLCMachineMode[nChan].Standby,
+				bModeAutomatic		:= PLCMachineMode[nChan].Automatic,
+				bModeManual			:= PLCMachineMode[nChan].Manual,
+				bModeMDI				:= PLCMachineMode[nChan].MDI,
+				bModeReference		:= PLCMachineMode[nChan].Homing,
+
+				(* Operation State *)
+				bStateSelect		:= bDummy,
+				bStateReady			:= bDummy,
+				bStateStart			:= PLCMachineMode[nChan].Start,
+				bStateStop			:= PLCMachineMode[nChan].Stop,
+				bStateReset			:= PLCMachineMode[nChan].Reset,
+
+				(* Special Functions *)
+				sProgramName		:= PLCMachineMode[nChan].ProgramName,
+				sMDIString			:= PLCMachineMode[nChan].MDIString,
+				bBackwardMotion	:= PLCMachineMode[nChan].Backward,
+				bPrgBlockIgnore	:= PLCMachineMode[nChan].PrgBlockIgnore,
+				bFeedHold			:= PLCMachineMode[nChan].FeedHold,
+				bSingleBlock		:= PLCMachineMode[nChan].SingleBlock,
+				bDoSingleBlock		:= PLCMachineMode[nChan].DoSingleBlock,
+				bM01Stop				:= PLCMachineMode[nChan].M01Stop,
+				nSyntaxCheck		:= PLCMachineMode[nChan].SyntaxCheck.nType,
+
+				(* manual mode parameter *)
+				stManualModeParam := manualModeParam);
+*)
+
+cncplcprogram_manualMode:=GVL.gvl_manualMode;
+cncplcprogram_automaticMode:=GVL.gvl_automaticMode;
+
+CncChannel1(nChan					:= nChan,
+				(* Operation Mode *)
+				bModeStandby		:= PLCMachineMode[nChan].Standby,
+				bModeAutomatic		:= PLCMachineMode[nChan].Automatic,
+				bModeManual			:= PLCMachineMode[nChan].Manual,
+				bModeMDI				:= PLCMachineMode[nChan].MDI,
+				bModeReference		:= PLCMachineMode[nChan].Homing,
+
+				(* Operation State *)
+				bStateSelect		:= bDummy,
+				bStateReady			:= bDummy,
+				bStateStart			:= PLCMachineMode[nChan].Start,
+				bStateStop			:= PLCMachineMode[nChan].Stop,
+				bStateReset			:= PLCMachineMode[nChan].Reset,
+
+				(* Special Functions *)
+				sProgramName		:= PLCMachineMode[nChan].ProgramName,
+				sMDIString			:= PLCMachineMode[nChan].MDIString,
+				bBackwardMotion	:= PLCMachineMode[nChan].Backward,
+				bPrgBlockIgnore	:= PLCMachineMode[nChan].PrgBlockIgnore,
+				bFeedHold			:= PLCMachineMode[nChan].FeedHold,
+				bSingleBlock		:= PLCMachineMode[nChan].SingleBlock,
+				bDoSingleBlock		:= PLCMachineMode[nChan].DoSingleBlock,
+				bM01Stop				:= PLCMachineMode[nChan].M01Stop,
+				nSyntaxCheck		:= PLCMachineMode[nChan].SyntaxCheck.nType,
+
+				(* manual mode parameter *)
+				stManualModeParam := manualModeParam);
+
+BlockSearch_Channel1(
+				nChan					:= nChan,
+  				bStartRead        := PLCMachineMode[nChan].BlockSearch.bStartRead,   (* Edge signal *)
+   			bStartWrite       := PLCMachineMode[nChan].BlockSearch.bStartWrite,  (* Edge signal *)
+				BlockSearch			:= PLCMachineMode[nChan].BlockSearch);
+
+CNCSystem.Channel[nChan].ActDistance := BlockSearch_Channel1.coveredDistance / 10.0;
+CNCSystem.Channel[nChan].ActBlockCount := BlockSearch_Channel1.actualBlockCount_AferReset;
+GVL.gvl_blockcount := BlockSearch_Channel1.actualBlockCount;
+
+(* Axis manual mode with parallel interpolation G201 *)
+PRG_ManualModeG201(nChan:=nChan);
+
+
+(* ---------------------------------------------- *)
+(* ----------- Channel 2 ------------------------ *)
+(* ---------------------------------------------- *)
+
+nChan := 2;
+
+(*  Suspend Channel Axis ->"jog of path" *)
+HLI_ChannelSetSuspendAxisOutput(nChan:=nChan, bSuspendAxis:=bSuspendAxisOutputChan2);
+bSuspendAxisOutputChan2 := FALSE;
+
+CncChannel2(nChan					:= nChan,
+				(* Operation Mode *)
+				bModeStandby		:= PLCMachineMode[nChan].Standby,
+				bModeAutomatic		:= PLCMachineMode[nChan].Automatic,
+				bModeManual			:= PLCMachineMode[nChan].Manual,
+				bModeMDI				:= PLCMachineMode[nChan].MDI,
+				bModeReference		:= PLCMachineMode[nChan].Homing,
+
+				(* Operation State *)
+				bStateSelect		:= bDummy,
+				bStateReady			:= bDummy,
+				bStateStart			:= PLCMachineMode[nChan].Start,
+				bStateStop			:= PLCMachineMode[nChan].Stop,
+				bStateReset			:= PLCMachineMode[nChan].Reset,
+
+				(* Special Functions *)
+				sProgramName		:= PLCMachineMode[nChan].ProgramName,
+				sMDIString			:= PLCMachineMode[nChan].MDIString,
+				bBackwardMotion	:= PLCMachineMode[nChan].Backward,
+				bPrgBlockIgnore	:= PLCMachineMode[nChan].PrgBlockIgnore,
+				bFeedHold			:= PLCMachineMode[nChan].FeedHold,
+				bSingleBlock		:= PLCMachineMode[nChan].SingleBlock,
+				bDoSingleBlock		:= PLCMachineMode[nChan].DoSingleBlock,
+				bM01Stop				:= PLCMachineMode[nChan].M01Stop,
+				nSyntaxCheck		:= PLCMachineMode[nChan].SyntaxCheck.nType);
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="CncPlcProgram">
+      <LineId Id="3" Count="16" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="382" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="384" Count="0" />
+      <LineId Id="21" Count="1" />
+      <LineId Id="385" Count="2" />
+      <LineId Id="23" Count="9" />
+      <LineId Id="266" Count="0" />
+      <LineId Id="268" Count="0" />
+      <LineId Id="306" Count="0" />
+      <LineId Id="343" Count="2" />
+      <LineId Id="618" Count="6" />
+      <LineId Id="33" Count="67" />
+      <LineId Id="704" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="705" Count="0" />
+      <LineId Id="102" Count="75" />
+      <LineId Id="455" Count="0" />
+      <LineId Id="457" Count="1" />
+      <LineId Id="456" Count="0" />
+      <LineId Id="424" Count="0" />
+      <LineId Id="552" Count="26" />
+      <LineId Id="178" Count="8" />
+      <LineId Id="664" Count="0" />
+      <LineId Id="187" Count="42" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

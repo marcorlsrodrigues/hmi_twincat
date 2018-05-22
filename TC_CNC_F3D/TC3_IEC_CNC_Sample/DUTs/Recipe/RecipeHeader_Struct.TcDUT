@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4018.5">
+  <DUT Name="RecipeHeader_Struct" Id="{7c3b8b55-6e4b-4cdc-be01-d81ac0454d14}">
+    <Declaration><![CDATA[{attribute 'pack_mode':='1'}
+TYPE RecipeHeader_Struct :
+STRUCT
+   Name1        : STRING[40];
+   Name2        : STRING[40];
+   Reserve      : ARRAY[3..10] OF STRING[40];
+   Values       : ARRAY[1..30] OF LREAL;
+   List         : ARRAY[1..50] OF RecipeList_Struct;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

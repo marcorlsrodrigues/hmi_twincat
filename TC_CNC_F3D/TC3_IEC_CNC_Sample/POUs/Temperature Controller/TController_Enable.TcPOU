@@ -1,0 +1,120 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <POU Name="TController_Enable" Id="{f3965997-2671-481d-985f-bc412e7d0722}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM TController_Enable
+VAR
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Desligar ventoinhas depois de máquina arrefecer *)
+IF IOs.Temp_Camara_in<4000 AND IOs.Temp_Camara_out<4000 AND Temp_Camara_set<4000 THEN
+	IOs.IO_Out_Vent_Camara:=FALSE;
+	IOs.IO_Out_Vent_cabl_X:=FALSE;
+	IOs.IO_Out_Vent_Porta:=FALSE;
+	IOs.IO_Out_Vent_Quadro1:=FALSE;
+END_IF
+
+(* Ligar Recirculação do ar da camara se temperatura for definida ou superior a 50ºC*)
+IF IOs.Temp_Camara_in>5000 OR IOs.Temp_Camara_out>5000 OR Temp_Camara_set<>0 OR IOs.A_Out_Aque_Ar<>0 THEN
+	IOs.IO_Out_Vent_Camara:=TRUE;
+END_IF
+
+(*Ligar refrigeração da mesa se temperatura do tabuleiro superar os 80ºC*)
+IF IOs.Temp_Tabuleiro>8000 THEN
+	IOs.IO_Out_Vent_cabl_X:=TRUE;
+END_IF
+
+(* Ligar refrigeração da câmara só quando a temperatura superar os 50ºC (aquecimento mais rápido)*)
+IF IOs.Temp_Camara_out>5000 OR IOs.Temp_Camara_in>5000 THEN
+	IOs.IO_Out_Vent_cabl_X:=TRUE;
+	IOs.IO_Out_Vent_Porta:=TRUE;
+	IOs.IO_Out_Vent_Quadro1:=TRUE;
+END_IF
+
+(* Ligar Chiller quando temperatura do extrusor for definida, ou temperatura da câmara acima dos 50ºC. Desligar quando tudo estiver abaixo dos 40ºC*)
+IF  Temp_Extrusor_1_set<>0 OR Temp_Camara_set>5000 OR IOs.Temp_Camara_in>5000 OR IOs.Temp_Camara_out>5000 OR IOs.Temp_Extrusor_1>5000 THEN
+	IOs.IO_Out_Chiller:=TRUE;
+	IOs.IO_Out_Vent_Quadro1:=TRUE;
+	ELSIF IOs.Temp_Camara_in<4000 AND IOs.Temp_Camara_out<4000 AND IOs.Temp_Extrusor_1<4000 THEN
+ 		IOs.IO_Out_Chiller:=FALSE;	
+END_IF
+
+(*Ligar segundo set de ventoinhas do quadro se temperatura passar os 35ºC*)
+IF IOs.Temp_Quadro>3500 THEN
+	IOs.IO_Out_Vent_Quadro2:=TRUE;
+	ELSIF IOs.Temp_Quadro<3000 THEN
+		IOs.IO_Out_Vent_Quadro2:=FALSE;
+END_IF
+
+(*Inicio dos controladores ou desligar saidas*)
+IF Temp_Tabuleiro_set<>0 THEN
+	PTab();
+ELSE
+	IOs.IO_Out_Aque_Mesa:=0;
+END_IF
+
+IF Temp_Extrusor_1_set<>0 THEN
+	Pext();
+ELSE
+	IOs.IO_Out_Aque_Extrusor:=0;
+END_IF
+
+IOs.IO_Out_Chiller:=1;
+
+IF Temp_Camara_set<>0 THEN	
+	PCamara();
+ELSE 
+	IOs.A_Out_Aque_Ar:=0;
+END_IF
+
+
+IF IOs.IO_In_Emergencia=1 THEN
+	IOs.A_Out_Aque_Ar:=0;
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="TController_Enable">
+      <LineId Id="64" Count="0" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="65" Count="2" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="98" Count="3" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="57" Count="5" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="90" Count="2" />
+      <LineId Id="94" Count="1" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="6" Count="3" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="10" Count="4" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="109" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="20" Count="1" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="114" Count="1" />
+      <LineId Id="119" Count="2" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,53 @@
+﻿<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.19">
+  <POU Name="HLI_AxisSetControlToPlc" Id="{e9f126dc-3a48-443f-be49-c5fadc9b5825}">
+    <Declaration><![CDATA[FUNCTION HLI_AxisSetControlToPlc : bool
+VAR_INPUT
+END_VAR
+VAR
+ 	idx						: UDINT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: HLI_AxisSetControlToPlc                           *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(* Author: MK                                                *)
+(*   Date: 21.12.2011                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+(* enable control units used by the program *)
+FOR idx := 0 TO gNrAx - 1 DO
+
+	IF gpAx[idx] <> 0 THEN						// check for zero pointer
+		// PLC_Present for all axis
+		gpAx[idx]^.head.plc_present_w := TRUE;
+
+		// declare axis for reset
+		(*gpAx[idx]^.LcControlIpo_Data.LCControlBoolUnit_PLCReset.X_Enable := TRUE;*)
+		(*gpAx[idx]^.McControlIpo_Data.MCControlBoolUnit_SpdlReset.X_Enable := TRUE;*)
+
+		(* declare axis for reference *)
+		gpAx[idx]^.lr_mc_control.reference_cam.enable_w := TRUE;
+
+		(* enable signals for real drives *)
+		gpAx[idx]^.lr_mc_control.torque_permission.enable_w := TRUE;
+		gpAx[idx]^.lr_mc_control.release_feedhold.enable_w := TRUE;
+		gpAx[idx]^.lr_mc_control.drive_on.enable_w := TRUE;
+		
+		(* enable external commanding of an axis *)
+		gpAx[idx]^.lr_mc_control.add_cmd_values.enable_w := TRUE;
+
+		(* enable the axis to tracking operation (follow up) *)
+		gpAx[idx]^.lr_mc_control.follow_up.enable_w := TRUE;
+	END_IF
+
+END_FOR
+
+HLI_AxisSetControlToPlc := TRUE;
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

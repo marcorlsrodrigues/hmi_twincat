@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <DUT Name="ST_HmiChannel" Id="{829e2fec-94d9-4aa1-87ce-3e37d0e09e23}">
+    <Declaration><![CDATA[TYPE ST_HmiChannel :
+STRUCT
+   SetModeAutomatic				: BOOL;
+   SetModeManual					: BOOL;
+   SetModeMDI						: BOOL;
+	// ----------------------------
+   SetStart							: BOOL;
+   SetStop							: BOOL;
+   SetReset							: BOOL;
+	// ----------------------------
+   State								: STRING;
+   Mode								: STRING;
+	CommandFeed						: LREAL;
+	ActiveFeed						: LREAL;
+	OverrideFeedrate				: LREAL;
+	NcFileName						: STRING(255);
+	NcFileOffset					: DINT;
+	// ----------------------------
+   Error								: BOOL;
+   ErrorVis							: STRING;
+	ActiveProgramBuffer			: ARRAY[0..2000] OF BYTE;
+	// ----------------------------
+	ActiveGFuncString				: STRING;
+	ActiveMFuncString				: STRING;
+	ActiveTFuncString				: STRING;
+	// ----------------------------
+	AxisMax							: INT;
+	Axis								: ARRAY[0..5] OF ST_HmiAxis;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

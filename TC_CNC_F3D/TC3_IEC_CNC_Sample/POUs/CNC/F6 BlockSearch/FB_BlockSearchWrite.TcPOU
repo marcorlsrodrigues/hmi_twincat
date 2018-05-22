@@ -1,0 +1,47 @@
+﻿<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.19">
+  <POU Name="FB_BlockSearchWrite" Id="{072a3624-6ccd-486e-904e-2db5852941e6}">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_BlockSearchWrite
+VAR_INPUT
+	nIdxGrp					: UDINT;
+	nIdxOffs					: UDINT;
+	nLen						: UDINT;
+	bStart					: BOOL;
+	pDest						: POINTER TO DWORD;
+END_VAR
+VAR_OUTPUT
+	Busy						: BOOL;
+	bErr						: BOOL;
+END_VAR
+VAR
+   fbWrite              : ADSWRITE;
+   bStarted             : BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF bStarted = FALSE THEN
+   IF bStart = TRUE THEN
+      bStarted := TRUE;
+      bErr := FALSE;
+      Busy := TRUE;
+   END_IF
+END_IF
+
+IF bStarted THEN
+   (* raising edge of Timer triggers write request *)
+   fbWrite(NetID:='', Port:=553, IdxGrp:=nIdxGrp, IdxOffs:=nIdxOffs,
+         LEN:=nLen, SrcAddr:=pDest, WRITE:=bStarted, TMOUT:=T#1S);
+   IF NOT fbWrite.Busy THEN
+      (* There was an error in the execution of the write request *)
+      IF fbWrite.Err THEN
+         bErr := TRUE;
+      END_IF
+      fbWrite(WRITE := FALSE);    (* reset because of edge detection in FB ADSWRITE *)
+      bStarted := FALSE;
+      Busy := FALSE;
+   END_IF
+END_IF
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,37 @@
+﻿<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.19">
+  <POU Name="HLI_UserInitialisation" Id="{928925b6-5ab6-47fe-8f75-95e311fcc7e5}">
+    <Declaration><![CDATA[FUNCTION HLI_UserInitialisation : bool
+VAR_INPUT
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: HLI_UserInitialisation                            *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(* Author: MK                                                *)
+(*   Date: 21.12.2011                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+(* please do reset the plc program, if you change something in this module
+	or in modules are in the sublevel *)
+
+(* Axes spezific control units *)
+HLI_AxisSetControlToPlc();
+
+(* Channel 1, channel specific control unit *)
+HLI_ChannelSetControlToPlc(nChan:=1);
+
+(* Channel 2, channel specific control unit *)
+HLI_ChannelSetControlToPlc(nChan:=2);
+
+HLI_UserInitialisation := TRUE;
+]]></ST>
+    </Implementation>
+    <ObjectProperties />
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <POU Name="CncMFunctions" Id="{acafc1c7-34a0-4d9f-8013-7e055f97cee5}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM CncMFunctions
+VAR
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: CncMFunctions                                     *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(* Author: MK                                                *)
+(*   Date: 21.12.2011                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+(*
+IF CncSystem.Channel[1].M[40] = TRUE THEN
+	CncSystem.Channel[1].M[40] := FALSE;
+END_IF
+*)
+
+(* M-functions *)
+IF CNCSystem.Channel[1].M[17] = TRUE THEN
+	CNCSystem.Channel[1].M[17] := FALSE;
+END_IF
+
+(*IF CNCSystem.Channel[1].M[52] = TRUE THEN
+	Temp_Tabuleiro_set:=CNCSystem.Channel[1].M_Argument[52];
+		IF (IOs.Temp_Tabuleiro<Temp_Tabuleiro_set+100 AND IOs.Temp_Tabuleiro>Temp_Tabuleiro_set-100) OR Temp_Tabuleiro_set=0 THEN
+			CNCSystem.Channel[1].M[52] := FALSE;
+		END_IF
+END_IF*)]]></ST>
+    </Implementation>
+    <LineIds Name="CncMFunctions">
+      <LineId Id="3" Count="15" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="33" Count="2" />
+      <LineId Id="37" Count="2" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

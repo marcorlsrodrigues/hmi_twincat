@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.0.38">
+  <DUT Name="ST_ToolManagement" Id="{7f657688-26d7-4496-830d-23cdc557e215}">
+    <Declaration><![CDATA[TYPE ST_ToolManagement :		(* Tool management *)
+STRUCT
+		ToolLife					: ST_ToolLife;		(* tool life data, PLC -> HMI *)
+		ToolDataActive			: BOOL;				(* tool data activation, HMI -> PLC *)
+		ToolData					: ARRAY[1..MAX_TOOLS] OF ST_ToolData;		(* tool data, HMI -> PLC *)
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

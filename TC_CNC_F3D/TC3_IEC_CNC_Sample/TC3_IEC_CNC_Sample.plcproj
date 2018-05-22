@@ -1,0 +1,721 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{fd28bf6b-aee6-4623-8b6e-02f0fc08d481}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>MyApplication</RootNamespace>
+    <AssemblyName>MyApplication</AssemblyName>
+    <Name>CNC_Base_program</Name>
+    <Application>{4f43919d-8f13-4fe1-81a0-8dbbc17a66f5}</Application>
+    <TypeSystem>{3accd04e-ee9e-4c64-a170-13dda4803a27}</TypeSystem>
+    <Implicit_Task_Info>{0c430ac7-001e-4daa-ad07-170eb0388657}</Implicit_Task_Info>
+    <Implicit_KindOfTask>{3479f67d-4f05-4dac-b643-bfb13dcf3a29}</Implicit_KindOfTask>
+    <Implicit_Jitter_Distribution>{bb41f246-02c8-4a1d-8c3e-ab0e0c1b1052}</Implicit_Jitter_Distribution>
+    <ExternalTypes>
+      <Type Guid="{18071995-0000-0000-0000-000000000019}">HRESULT</Type>
+      <Type Guid="{18071995-0000-0000-0000-000000000025}">IID</Type>
+      <Type Guid="{03000012-0000-0000-e000-000000000064}">ITcADI</Type>
+      <Type Guid="{00000030-0000-0000-e000-000000000064}">ITComObjectServer</Type>
+      <Type Guid="{02000002-0000-0000-e000-000000000064}">ITcTask</Type>
+      <Type Guid="{00000001-0000-0000-e000-000000000064}">ITcUnknown</Type>
+      <Type Guid="{d91e046a-a488-4d27-8d43-0f3c40ed5081}">PlcAppSystemInfo</Type>
+      <Type Guid="{6a76d020-03a2-465c-a678-c341951e9ef3}">PlcTaskSystemInfo</Type>
+    </ExternalTypes>
+    <FileVersion>1.0.0.0</FileVersion>
+    <LibraryReferences>{fe4b4306-fb68-45d3-a679-a3bbaa47c151}</LibraryReferences>
+    <ProgramVersion>3.1.4020.1</ProgramVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug\</OutputPath>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Release\</OutputPath>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="DUTs\Cnc_Data_Types\HMI\ST_HmiAxis.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\Cnc_Data_Types\HMI\ST_HmiChannel.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\Cnc_Data_Types\HMI\ST_HmiData.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\Cnc_Data_Types\ST_BlockSearch.TcDUT">
+      <SubType>Code</SubType>
+      <ObjectGuid>{e4bb4b7c-39f7-4179-a327-fc82cf600896}</ObjectGuid>
+    </Compile>
+    <Compile Include="DUTs\Cnc_Data_Types\ST_CncChannel.TcDUT">
+      <SubType>Code</SubType>
+      <ObjectGuid>{82e90855-6f1d-4244-b73c-ba57c1d3b43e}</ObjectGuid>
+    </Compile>
+    <Compile Include="DUTs\Cnc_Data_Types\ST_CncSystem.TcDUT">
+      <SubType>Code</SubType>
+      <ObjectGuid>{6287f823-86de-4773-89c5-3bd9e3e0c286}</ObjectGuid>
+    </Compile>
+    <Compile Include="DUTs\Cnc_Data_Types\ST_PosVector.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\Cnc_Data_Types\ST_MachineMode.TcDUT">
+      <SubType>Code</SubType>
+      <ObjectGuid>{7aec2501-ffdf-4a43-91a5-834aa5450a07}</ObjectGuid>
+    </Compile>
+    <Compile Include="DUTs\Cnc_Data_Types\ST_ManualModeParam.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DUTs\Cnc_Data_Types\ST_OpModes.TcDUT">
+      <SubType>Code</SubType>
+      <ObjectGuid>{197ddc56-bccc-43a1-835a-c9f2a4fffb4b}</ObjectGuid>
+    </Compile>
+    <Compile Include="DUTs\Cnc_Data_Types\ST_OpStates.TcDUT">
+      <SubType>Code</SubType>
+      <ObjectGuid>{0d4dd5bf-38f5-4fb4-884e-24c9014c566d}</ObjectGuid>
+    </Compile>
+    <Compile Include="DUTs\Cnc_Data_Types\ST_SyntaxCheck.TcDUT">
+      <SubType>Code</SubType>
+      <ObjectGuid>{cf3f7200-d733-4ed7-a5ee-20611535c996}</ObjectGuid>
+    </Compile>
+    <Compile Include="DUTs\Cnc_Data_Types\ToolManagement\ST_ToolData.TcDUT">
+      <SubType>Code</SubType>
+      <ObjectProtection>00000000-0000-0000-0000-000000000000</ObjectProtection>
+    </Compile>
+    <Compile Include="DUTs\Cnc_Data_Types\ToolManagement\ST_ToolLife.TcDUT">
+      <SubType>Code</SubType>
+      <ObjectProtection>00000000-0000-0000-0000-000000000000</ObjectProtection>
+    </Compile>
+    <Compile Include="DUTs\Cnc_Data_Types\ToolManagement\ST_ToolManagement.TcDUT">
+      <SubType>Code</SubType>
+      <ObjectProtection>00000000-0000-0000-0000-000000000000</ObjectProtection>
+    </Compile>
+    <Compile Include="DUTs\Recipe\RecipeHeader_Struct.TcDUT">
+      <SubType>Code</SubType>
+      <ObjectProtection>00000000-0000-0000-0000-000000000000</ObjectProtection>
+    </Compile>
+    <Compile Include="DUTs\Recipe\RecipeList_Struct.TcDUT">
+      <SubType>Code</SubType>
+      <ObjectProtection>00000000-0000-0000-0000-000000000000</ObjectProtection>
+    </Compile>
+    <Compile Include="DUTs\VE_VarData\ST_VEVariableConfig.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GlobalTextList.TcGTLO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GVLs\Global_Manual.TcGVL">
+      <SubType>Code</SubType>
+      <ObjectProtection>00000000-0000-0000-0000-000000000000</ObjectProtection>
+    </Compile>
+    <Compile Include="GVLs\Global_Variables.TcGVL">
+      <SubType>Code</SubType>
+      <ObjectGuid>{be5fbab2-9822-452a-bd00-37e018eeb982}</ObjectGuid>
+    </Compile>
+    <Compile Include="GVLs\GVL.TcGVL">
+      <SubType>Code</SubType>
+      <LinkAlways>true</LinkAlways>
+    </Compile>
+    <Compile Include="GVLs\IOs.TcGVL">
+      <SubType>Code</SubType>
+      <ObjectGuid>{5ecb82ab-cff4-4d7f-8039-086ca7daf453}</ObjectGuid>
+    </Compile>
+    <Compile Include="GVLs\Machining_Data.TcGVL">
+      <SubType>Code</SubType>
+      <ObjectGuid>{03231454-d918-4033-9c7f-e37d9902600e}</ObjectGuid>
+    </Compile>
+    <Compile Include="PlcTask.TcTTO">
+      <SubType>Code</SubType>
+      <ObjectGuid>{e3101639-1f43-4b71-a3ae-ad7a45f889cc}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CncAxisEnable.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{7413efca-bab7-40cc-bed2-f01454c872be}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CncHFunctions.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\CncPlcManualFunctions.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectProtection>00000000-0000-0000-0000-000000000000</ObjectProtection>
+    </Compile>
+    <Compile Include="POUs\CncPlcMessages.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectProtection>00000000-0000-0000-0000-000000000000</ObjectProtection>
+    </Compile>
+    <Compile Include="POUs\CncVariables.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\CncMFunctions.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{acafc1c7-34a0-4d9f-8013-7e055f97cee5}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CncRefPosOffs.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{31105125-b107-4bf8-a270-dd95a3f2aceb}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F1_Init\CncToolControl.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{6628b4b1-6331-4394-ba90-cf0c81c2c1fd}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F2_Operation Mode\HLI_AxisManualMode.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\CNC\F2_Operation Mode\HLI_AxisReset.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{12b9d8aa-dd0b-40de-8963-75382cf1b707}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F2_Operation Mode\HLI_ChannelModeAuto.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{3e9182a1-775e-4f58-aa4a-e0eef786107f}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F2_Operation Mode\HLI_ChannelModeManual.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{1d083cc8-c05f-4655-80f2-5192664de2f3}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F2_Operation Mode\HLI_ChannelModeMDI.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{73476843-bde2-4e16-ade7-818baca1846a}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F2_Operation Mode\HLI_ChannelModeReference.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{70d4fccd-cd90-4a70-b554-eaeb7e0f493d}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F2_Operation Mode\HLI_ChannelModeStandby.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{617fe74b-889a-406c-a1b3-2350a29a980c}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F2_Operation Mode\HLI_ChannelReset.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{e6515d22-0601-4750-a5ad-d979bcfd5126}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F2_Operation Mode\MM_TEst.TcPOU">
+      <SubType>Code</SubType>
+      <ExcludeFromBuild>True</ExcludeFromBuild>
+    </Compile>
+    <Compile Include="POUs\CNC\F3_Control\HLI_ChannelGetActiveFeed.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectProtection>00000000-0000-0000-0000-000000000000</ObjectProtection>
+    </Compile>
+    <Compile Include="POUs\CNC\F3_Control\HLI_ChannelGetStatusInfo.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{a38a1fa5-d4b1-4af9-be40-ea48159e4e78}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F3_Control\HLI_ChannelResetRequest.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{c9e73215-649b-4081-be27-81078deba9f3}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F3_Control\HLI_ChannelSetBackwardMotion.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{c1ec6a37-2069-4e9b-8231-9ece5e8d8f8f}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F3_Control\HLI_ChannelSetFeedHold.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{3dd3eccb-0337-4cc7-9bfa-ef8c2fb38c96}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F3_Control\HLI_ChannelSetHandWheelIncs.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{7c0a9097-90f4-461f-8649-5eec7a4ad6f3}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F3_Control\HLI_ChannelSetOptionalM01Stop.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{5cd4df04-6095-49c1-bca4-bfd5c5ab8f96}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F3_Control\HLI_ChannelSetProgramBlockIgnore.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{5e69f5dd-ee85-4908-a74d-0e387d936f88}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F3_Control\HLI_ChannelSetReducedFeed.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{1e6671ef-e235-461f-bd06-0585be7c7863}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F3_Control\HLI_ChannelSetSingleBlock.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{cbd44eaa-f767-46e9-ad7c-007dca3373d8}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F3_Control\HLI_ChannelSetSuspendAxisOutput.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{0c39937d-dd4c-4625-8832-595649f258f8}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F3_Control\HLI_ChannelSetSyntaxCheck.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{ed27d5b3-fe09-4f77-bcef-67f59cab96b7}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F3_Control\HLI_ChannelGetError.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{ec337ffb-e888-406b-a8e3-e87d9345f42d}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F3_Control\HLI_ChannelGetMessage.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{3706ebd1-4926-499b-8a62-b18a9c9d6670}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F3_Control\HLI_ChannelGetMode.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{6e420aed-172e-4934-ab1f-e7aad7bfc266}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F3_Control\HLI_ChannelGetState.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{363fa066-5b42-4ff5-a305-2c1ca73d7ed0}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F3_Control\HLI_AxisSetFeedHold.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{167ee421-57ac-4247-af3a-377e1cd385b3}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F3_Control\HLI_AxisSetReferenceCam.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{c81570fb-fc3f-4ffa-8eae-b32fd8f3c9a1}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F3_Control\HLI_AxisSetTrackingOperation.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{e50b2c90-aa03-49c6-ad5f-866395550728}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F3_Control\HLI_ChannelSetOverride.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{cb81e027-6f1e-4514-84b8-766b067cbf45}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F1_Init\HLI_Init.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{53a8f2d0-fd3a-4dce-b66c-1d8e09a21938}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F1_Init\HLI_AxisSetControlToPlc.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{e9f126dc-3a48-443f-be49-c5fadc9b5825}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F1_Init\HLI_ChannelSetControlToPlc.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{cb291fd4-0fcc-4d9d-84b8-5ea96a7ed0ea}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F1_Init\HLI_UserInitialisation.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{928925b6-5ab6-47fe-8f75-95e311fcc7e5}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F2_Operation Mode\HLI_CncChannel.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{83547661-8c9d-4f3b-974c-4f4cf554e9c3}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CncPlcProgram.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{e070a9f3-4b2a-4b46-bfa0-15e9cec8f40f}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F4_MHT-Function\HLI_ChannelResetMFunctions.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{50e6669c-cea5-43a4-b95e-f6587d9ef2ba}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F4_MHT-Function\HLI_DoChannelHFunction.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{e9129950-b0b5-48e8-816d-5ba22b5e661b}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F4_MHT-Function\HLI_DoChannelMFunction.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{30ae9bbc-e327-48cd-9c95-543fb74593c1}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F4_MHT-Function\HLI_DoChannelTFunction.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{6688c1e5-e144-4b1c-a019-9e8e190756f5}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F4_MHT-Function\HLI_QuitAxisMFunction.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{61531ac9-0472-44fc-8752-087312b7fc16}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F4_MHT-Function\HLI_QuitChannelMHTFunction.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{ed50aa21-7bfe-44a0-8199-4db76bb00694}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F5_Variables\LinkVEChannelStructure.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\CNC\F6 BlockSearch\FB_BlockSearchRead.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{f313eae3-f90e-4e94-99b1-b8b0341a945d}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F6 BlockSearch\FB_BlockSearchWrite.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{072a3624-6ccd-486e-904e-2db5852941e6}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F6 BlockSearch\HLI_ChannelBlockSearch.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{2564dd2e-509e-45ed-8ab4-f2fa78472209}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F9_Misc\ADSLOG.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{4ba77efa-d729-4c6a-a764-190da2c9051d}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F9_Misc\ADSLOG2.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectProtection>00000000-0000-0000-0000-000000000000</ObjectProtection>
+    </Compile>
+    <Compile Include="POUs\CNC\F9_Misc\HandWheel\FB_HandWheelEnc.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\CNC\F9_Misc\HandWheel\PRG_ManualModeG201.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\CNC\F9_Misc\MySystemTime.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectProtection>00000000-0000-0000-0000-000000000000</ObjectProtection>
+    </Compile>
+    <Compile Include="POUs\CNC\F9_Misc\Security\CheckCNCAlive.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{21cb718a-6caa-400a-b25a-dd8e15b56fd6}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\CNC\F9_Misc\Security\SetPlcAlive.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{73bf61f1-0fc8-4c36-96a9-4611ed80cf6a}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\General\DemoTest.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectProtection>00000000-0000-0000-0000-000000000000</ObjectProtection>
+    </Compile>
+    <Compile Include="POUs\General\DemoUpDown.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{99b245da-846f-4fb7-afa6-6222406d5dd7}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\General\Examples.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\General\FB_Flash.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectProtection>00000000-0000-0000-0000-000000000000</ObjectProtection>
+    </Compile>
+    <Compile Include="POUs\General\FB_AdsRead.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{0f2a6b75-e057-45c3-80c0-fe6600ca6383}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\General\FB_ReadPParamValue.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\General\DemoSine.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{dc581c8d-d061-4b4a-a4f1-0810dfb17c76}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\General\WritePersistentData.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectProtection>00000000-0000-0000-0000-000000000000</ObjectProtection>
+    </Compile>
+    <Compile Include="POUs\HMI\CncHmiData.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\HMI\DIntToString.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\HMI\FB_ReadChannelData.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\HMI\LRealToString.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\HMI\FB_ReadTechnoTFunc.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\HMI\FB_ReadTechnoMFunc.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\HMI\FB_ReadTechnoGFunc.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\HMI\FB_ReadWriteFileData.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\HMI\SetHMIVariables.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\MAIN.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{56a94792-f833-4bc1-a3f7-6ceccad4dcc0}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\Messages\FB_SimpleEventLog.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{6ea07cc0-8c78-4af9-a55a-0266b878ec0e}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\Messages\ShowMessages.TcPOU">
+      <SubType>Code</SubType>
+      <ObjectGuid>{7a9cefc9-2a17-4484-8e27-932b66a34088}</ObjectGuid>
+    </Compile>
+    <Compile Include="POUs\Temperature Controller\PCamara.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Temperature Controller\PCamara_Out.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Temperature Controller\PExt.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Temperature Controller\PExt_Out.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Temperature Controller\PTab.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Temperature Controller\PTab_Out.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\Temperature Controller\TController_Enable.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Visualization Manager.TcVMO">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="DUTs" />
+    <Folder Include="DUTs\Cnc_Data_Types" />
+    <Folder Include="DUTs\Cnc_Data_Types\HMI" />
+    <Folder Include="DUTs\Cnc_Data_Types\ToolManagement" />
+    <Folder Include="DUTs\Recipe" />
+    <Folder Include="DUTs\VE_VarData" />
+    <Folder Include="GVLs" />
+    <Folder Include="POUs\CNC" />
+    <Folder Include="POUs\CNC\F1_Init" />
+    <Folder Include="POUs\CNC\F3_Control" />
+    <Folder Include="POUs\CNC\F2_Operation Mode" />
+    <Folder Include="POUs\CNC\F4_MHT-Function" />
+    <Folder Include="POUs\CNC\F9_Misc" />
+    <Folder Include="POUs\CNC\F6 BlockSearch" />
+    <Folder Include="POUs\CNC\F9_Misc\HandWheel" />
+    <Folder Include="POUs\CNC\F9_Misc\Security" />
+    <Folder Include="POUs\CNC\F5_Variables" />
+    <Folder Include="POUs\General" />
+    <Folder Include="POUs\Messages" />
+    <Folder Include="POUs\HMI" />
+    <Folder Include="POUs\Temperature Controller" />
+    <Folder Include="VISUs" />
+    <Folder Include="POUs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="TC3_IEC_CNC_Sample.tmc">
+      <SubType>Content</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <PlaceholderReference Include="System_VisuElemMeter">
+      <DefaultResolution>VisuElemMeter, 3.5.8.0 (System)</DefaultResolution>
+      <Namespace>VisuElemMeter</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
+    </PlaceholderReference>
+    <PlaceholderReference Include="System_VisuElems">
+      <DefaultResolution>VisuElems, 3.5.8.40 (System)</DefaultResolution>
+      <Namespace>VisuElems</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
+    </PlaceholderReference>
+    <PlaceholderReference Include="System_VisuElemsSpecialControls">
+      <DefaultResolution>VisuElemsSpecialControls, 3.5.8.0 (System)</DefaultResolution>
+      <Namespace>VisuElemsSpecialControls</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
+    </PlaceholderReference>
+    <PlaceholderReference Include="System_VisuElemsWinControls">
+      <DefaultResolution>VisuElemsWinControls, 3.5.8.40 (System)</DefaultResolution>
+      <Namespace>VisuElemsWinControls</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
+    </PlaceholderReference>
+    <PlaceholderReference Include="System_VisuElemTextEditor">
+      <DefaultResolution>VisuElemTextEditor, 3.5.8.0 (System)</DefaultResolution>
+      <Namespace>VisuElemTextEditor</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
+    </PlaceholderReference>
+    <PlaceholderReference Include="system_visuinputs">
+      <DefaultResolution>visuinputs, 3.5.8.0 (system)</DefaultResolution>
+      <Namespace>visuinputs</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
+    </PlaceholderReference>
+    <PlaceholderReference Include="System_VisuNativeControl">
+      <DefaultResolution>VisuNativeControl, 3.5.8.0 (System)</DefaultResolution>
+      <Namespace>VisuNativeControl</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+      <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_CncHli">
+      <DefaultResolution>Tc2_CncHli, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_CncHli</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_ControllerToolbox">
+      <DefaultResolution>Tc2_ControllerToolbox, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_ControllerToolbox</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_Drive">
+      <DefaultResolution>Tc2_Drive, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_Drive</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_NcDrive">
+      <DefaultResolution>Tc2_NcDrive, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_NcDrive</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_NCI">
+      <DefaultResolution>Tc2_NCI, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_NCI</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_PlcInterpolation">
+      <DefaultResolution>Tc2_PlcInterpolation, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_PlcInterpolation</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_Standard">
+      <DefaultResolution>Tc2_Standard, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_Standard</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_System">
+      <DefaultResolution>Tc2_System, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_System</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_Utilities">
+      <DefaultResolution>Tc2_Utilities, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_Utilities</Namespace>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc3_Module">
+      <DefaultResolution>Tc3_Module, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc3_Module</Namespace>
+    </PlaceholderReference>
+  </ItemGroup>
+  <ProjectExtensions>
+    <PlcProjectOptions>
+      <XmlArchive>
+        <Data>
+          <o xml:space="preserve" t="OptionKey">
+      <v n="Name">"&lt;ProjectRoot&gt;"</v>
+      <d n="SubKeys" t="Hashtable" ckt="String" cvt="OptionKey">
+        <v>{FE9F63D4-9E34-43ce-9322-D46747A00F33}</v>
+        <o>
+          <v n="Name">"{FE9F63D4-9E34-43ce-9322-D46747A00F33}"</v>
+          <d n="SubKeys" t="Hashtable" />
+          <d n="Values" t="Hashtable" />
+        </o>
+        <v>{8F99A816-E488-41E4-9FA3-846536012284}</v>
+        <o>
+          <v n="Name">"{8F99A816-E488-41E4-9FA3-846536012284}"</v>
+          <d n="SubKeys" t="Hashtable" />
+          <d n="Values" t="Hashtable" />
+        </o>
+        <v>{29BD8D0C-3586-4548-BB48-497B9A01693F}</v>
+        <o>
+          <v n="Name">"{29BD8D0C-3586-4548-BB48-497B9A01693F}"</v>
+          <d n="SubKeys" t="Hashtable" ckt="String" cvt="OptionKey">
+            <v>Rules</v>
+            <o>
+              <v n="Name">"Rules"</v>
+              <d n="SubKeys" t="Hashtable" />
+              <d n="Values" t="Hashtable" />
+            </o>
+          </d>
+          <d n="Values" t="Hashtable" />
+        </o>
+        <v>{40450F57-0AA3-4216-96F3-5444ECB29763}</v>
+        <o>
+          <v n="Name">"{40450F57-0AA3-4216-96F3-5444ECB29763}"</v>
+          <d n="SubKeys" t="Hashtable" />
+          <d n="Values" t="Hashtable" ckt="String" cvt="String">
+            <v>ActiveVisuProfile</v>
+            <v>IR0whWr8bwfABwAAAXCU0gAAAABQAgAAAyHS1QAAAAABAAAAAAAAAAEaUwB5AHMAdABlAG0ALgBTAHQAcgBpAG4AZwACTHsAZgA5ADUAYgBiADQAMgA2AC0ANQA1ADIANAAtADQAYgA0ADUALQA5ADQAMAAwAC0AZgBiADAAZgAyAGUANwA3AGUANQAxAGIAfQADCE4AYQBtAGUABDJUAHcAaQBuAEMAQQBUACAAMwAuADEAIABCAHUAaQBsAGQAIAA0ADAAMgAwAC4AMQAwAAUWUAByAG8AZgBpAGwAZQBEAGEAdABhAAZMewAxADYAZQA1ADUAYgA2ADAALQA3ADAANAAzAC0ANABhADYAMwAtAGIANgA1AGIALQA2ADEANAA3ADEAMwA4ADcAOABkADQAMgB9AAcSTABpAGIAcgBhAHIAaQBlAHMACEx7ADMAYgBmAGQANQA0ADUAOQAtAGIAMAA3AGYALQA0AGQANgBlAC0AYQBlADEAYQAtAGEAOAAzADMANQA2AGEANQA1ADEANAAyAH0ACUx7ADkAYwA5ADUAOAA5ADYAOAAtADIAYwA4ADUALQA0ADEAYgBiAC0AOAA4ADcAMQAtADgAOQA1AGYAZgAxAGYAZQBkAGUAMQBhAH0ACg5WAGUAcgBzAGkAbwBuAAsGaQBuAHQADApVAHMAYQBnAGUADQpUAGkAdABsAGUADhpWAGkAcwB1AEUAbABlAG0ATQBlAHQAZQByAA8OQwBvAG0AcABhAG4AeQAQDFMAeQBzAHQAZQBtABESVgBpAHMAdQBFAGwAZQBtAHMAEjBWAGkAcwB1AEUAbABlAG0AcwBTAHAAZQBjAGkAYQBsAEMAbwBuAHQAcgBvAGwAcwATKFYAaQBzAHUARQBsAGUAbQBzAFcAaQBuAEMAbwBuAHQAcgBvAGwAcwAUJFYAaQBzAHUARQBsAGUAbQBUAGUAeAB0AEUAZABpAHQAbwByABUiVgBpAHMAdQBOAGEAdABpAHYAZQBDAG8AbgB0AHIAbwBsABYUdgBpAHMAdQBpAG4AcAB1AHQAcwAXDHMAeQBzAHQAZQBtABgYVgBpAHMAdQBFAGwAZQBtAEIAYQBzAGUAGSZEAGUAdgBQAGwAYQBjAGUAaABvAGwAZABlAHIAcwBVAHMAZQBkABoIYgBvAG8AbAAbIlAAbAB1AGcAaQBuAEMAbwBuAHMAdAByAGEAaQBuAHQAcwAcTHsANAAzAGQANQAyAGIAYwBlAC0AOQA0ADIAYwAtADQANABkADcALQA5AGUAOQA0AC0AMQBiAGYAZABmADMAMQAwAGUANgAzAGMAfQAdHEEAdABMAGUAYQBzAHQAVgBlAHIAcwBpAG8AbgAeFFAAbAB1AGcAaQBuAEcAdQBpAGQAHxZTAHkAcwB0AGUAbQAuAEcAdQBpAGQAIEhhAGYAYwBkADUANAA0ADYALQA0ADkAMQA0AC0ANABmAGUANwAtAGIAYgA3ADgALQA5AGIAZgBmAGUAYgA3ADAAZgBkADEANwAhFFUAcABkAGEAdABlAEkAbgBmAG8AIkx7AGIAMAAzADMANgA2AGEAOAAtAGIANQBjADAALQA0AGIAOQBhAC0AYQAwADAAZQAtAGUAYgA4ADYAMAAxADEAMQAwADQAYwAzAH0AIw5VAHAAZABhAHQAZQBzACRMewAxADgANgA4AGYAZgBjADkALQBlADQAZgBjAC0ANAA1ADMAMgAtAGEAYwAwADYALQAxAGUAMwA5AGIAYgA1ADUANwBiADYAOQB9ACVMewBhADUAYgBkADQAOABjADMALQAwAGQAMQA3AC0ANAAxAGIANQAtAGIAMQA2ADQALQA1AGYAYwA2AGEAZAAyAGIAOQA2AGIANwB9ACYWTwBiAGoAZQBjAHQAcwBUAHkAcABlACdUVQBwAGQAYQB0AGUATABhAG4AZwB1AGEAZwBlAE0AbwBkAGUAbABGAG8AcgBDAG8AbgB2AGUAcgB0AGkAYgBsAGUATABpAGIAcgBhAHIAaQBlAHMAKBBMAGkAYgBUAGkAdABsAGUAKRRMAGkAYgBDAG8AbQBwAGEAbgB5ACoeVQBwAGQAYQB0AGUAUAByAG8AdgBpAGQAZQByAHMAKzhTAHkAcwB0AGUAbQAuAEMAbwBsAGwAZQBjAHQAaQBvAG4AcwAuAEgAYQBzAGgAdABhAGIAbABlACwSdgBpAHMAdQBlAGwAZQBtAHMALUg2AGMAYgAxAGMAZABlADEALQBkADUAZABjAC0ANABhADMAYgAtADkAMAA1ADQALQAyADEAZgBhADcANQA2AGEAMwBmAGEANAAuKEkAbgB0AGUAcgBmAGEAYwBlAFYAZQByAHMAaQBvAG4ASQBuAGYAbwAvTHsAYwA2ADEAMQBlADQAMAAwAC0ANwBmAGIAOQAtADQAYwAzADUALQBiADkAYQBjAC0ANABlADMAMQA0AGIANQA5ADkANgA0ADMAfQAwGE0AYQBqAG8AcgBWAGUAcgBzAGkAbwBuADEYTQBpAG4AbwByAFYAZQByAHMAaQBvAG4AMgxMAGUAZwBhAGMAeQAzMEwAYQBuAGcAdQBhAGcAZQBNAG8AZABlAGwAVgBlAHIAcwBpAG8AbgBJAG4AZgBvADQaQwBvAG0AcABhAHQAaQBiAGkAbABpAHQAeQDQAAIaA9ADAS0E0AUGGgbQBwgaAUUHCQjQAAkaBEUKCwQDAAAABQAAAAgAAAAAAAAA0AwLrQIAAADQDQEtDtAPAS0Q0AAJGgRFCgsEAwAAAAUAAAAIAAAAKAAAANAMC60BAAAA0A0BLRHQDwEtENAACRoERQoLBAMAAAAFAAAACAAAAAAAAADQDAutAgAAANANAS0S0A8BLRDQAAkaBEUKCwQDAAAABQAAAAgAAAAoAAAA0AwLrQIAAADQDQEtE9APAS0Q0AAJGgRFCgsEAwAAAAUAAAAIAAAAAAAAANAMC60CAAAA0A0BLRTQDwEtENAACRoERQoLBAMAAAAFAAAACAAAAAAAAADQDAutAgAAANANAS0V0A8BLRDQAAkaBEUKCwQDAAAABQAAAAgAAAAAAAAA0AwLrQIAAADQDQEtFtAPAS0X0AAJGgRFCgsEAwAAAAUAAAAIAAAAKAAAANAMC60EAAAA0A0BLRjQDwEtENAZGq0BRRscAdAAHBoCRR0LBAMAAAAFAAAACAAAAAAAAADQHh8tINAhIhoCRSMkAtAAJRoFRQoLBAMAAAADAAAAAAAAAAoAAADQJgutAAAAANADAS0n0CgBLRHQKQEtENAAJRoFRQoLBAMAAAADAAAAAAAAAAoAAADQJgutAQAAANADAS0n0CgBLRHQKQEtEJoqKwFFAAEC0AABLSzQAAEtF9AAHy0t0C4vGgPQMAutAQAAANAxC60RAAAA0DIarQDQMy8aA9AwC60CAAAA0DELrQMAAADQMhqtANA0Gq0A</v>
+          </d>
+        </o>
+        <v>{A3BBA713-63D7-4de6-BEC2-E3BAAD8789F8}</v>
+        <o>
+          <v n="Name">"{A3BBA713-63D7-4de6-BEC2-E3BAAD8789F8}"</v>
+          <d n="SubKeys" t="Hashtable" />
+          <d n="Values" t="Hashtable" />
+        </o>
+        <v>{C70B7845-2722-4a9b-A0EA-88C877A4B36F}</v>
+        <o>
+          <v n="Name">"{C70B7845-2722-4a9b-A0EA-88C877A4B36F}"</v>
+          <d n="SubKeys" t="Hashtable" />
+          <d n="Values" t="Hashtable" ckt="String">
+            <v>EnableMaxAuthenticationTrials</v>
+            <v>true</v>
+            <v>MaxAuthenticationTrials</v>
+            <v>3</v>
+            <v>UserList</v>
+            <o t="UserList">
+              <a n="Users" cet="User">
+                <o>
+                  <v n="Id">{2348d547-0cf5-4217-a731-32f4e2a254e4}</v>
+                  <v n="Name">"Owner"</v>
+                  <v n="FullName">""</v>
+                  <v n="Description">""</v>
+                  <v n="Active">true</v>
+                </o>
+              </a>
+            </o>
+            <v>MaxTimeOfInactivity</v>
+            <v>10</v>
+            <v>EnableMaxTimeOfInactivity</v>
+            <v>true</v>
+            <v>GroupList</v>
+            <o t="GroupList">
+              <a n="Groups" cet="Group">
+                <o>
+                  <v n="Id">{9e57782b-7161-442d-83a6-aa58dc6e11c2}</v>
+                  <v n="Name">"Everyone"</v>
+                  <v n="Description">""</v>
+                  <v n="IsEveryoneGroup">true</v>
+                  <v n="IsOwnerGroup">false</v>
+                  <l n="UserMembers" t="ArrayList" cet="Guid">
+                    <v>2348d547-0cf5-4217-a731-32f4e2a254e4</v>
+                  </l>
+                  <l n="GroupMembers" t="ArrayList" />
+                </o>
+                <o>
+                  <v n="Id">{9f3a551d-c10d-4f9a-bc7f-0c0075ee66f9}</v>
+                  <v n="Name">"Owner"</v>
+                  <v n="Description">""</v>
+                  <v n="IsEveryoneGroup">false</v>
+                  <v n="IsOwnerGroup">true</v>
+                  <l n="UserMembers" t="ArrayList" cet="Guid">
+                    <v>2348d547-0cf5-4217-a731-32f4e2a254e4</v>
+                  </l>
+                  <l n="GroupMembers" t="ArrayList" />
+                </o>
+              </a>
+            </o>
+            <v>UserAuthentication</v>
+            <o t="UserAuthentication">
+              <d n="UserToPasswordHash" t="Hashtable" ckt="Guid" cvt="String">
+                <v>2348d547-0cf5-4217-a731-32f4e2a254e4</v>
+                <v>d41d8cd98f00b204e9800998ecf8427e</v>
+              </d>
+            </o>
+          </d>
+        </o>
+        <v>{192FAD59-8248-4824-A8DE-9177C94C195A}</v>
+        <o>
+          <v n="Name">"{192FAD59-8248-4824-A8DE-9177C94C195A}"</v>
+          <d n="SubKeys" t="Hashtable" />
+          <d n="Values" t="Hashtable" />
+        </o>
+        <v>{246001F4-279D-43AC-B241-948EB31120E1}</v>
+        <o>
+          <v n="Name">"{246001F4-279D-43AC-B241-948EB31120E1}"</v>
+          <d n="SubKeys" t="Hashtable" />
+          <d n="Values" t="Hashtable" ckt="String" cvt="String">
+            <v>SymbolLibraryConfiguration</v>
+            <v>VisuSymbols (System);False
+</v>
+          </d>
+        </o>
+      </d>
+      <d n="Values" t="Hashtable" />
+    </o>
+        </Data>
+        <TypeList>
+          <Type n="ArrayList">System.Collections.ArrayList</Type>
+          <Type n="Boolean">System.Boolean</Type>
+          <Type n="Group">{daecd4be-1e2b-4335-a125-4a1ac83ea49f}</Type>
+          <Type n="GroupList">{bf4dffda-f055-446d-9d7a-5f126720896b}</Type>
+          <Type n="Guid">System.Guid</Type>
+          <Type n="Hashtable">System.Collections.Hashtable</Type>
+          <Type n="Int32">System.Int32</Type>
+          <Type n="OptionKey">{54dd0eac-a6d8-46f2-8c27-2f43c7e49861}</Type>
+          <Type n="String">System.String</Type>
+          <Type n="User">{cd83029e-13b0-491e-9e4b-921adda0d86b}</Type>
+          <Type n="UserAuthentication">{3635a671-97f5-41bb-9e29-0ebb9795975c}</Type>
+          <Type n="UserList">{9fe6b547-6bc8-4f11-b589-b517860c5891}</Type>
+        </TypeList>
+      </XmlArchive>
+    </PlcProjectOptions>
+  </ProjectExtensions>
+</Project>

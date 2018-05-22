@@ -1,0 +1,91 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <POU Name="PCamara" Id="{7bdcc3af-5b22-4bea-a3aa-b8476a5a2db4}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM PCamara
+
+VAR
+	fSetpointValue					: FLOAT		:= 40000;
+	fActualValue					: FLOAT;
+	fManSyncValue					: FLOAT;
+	bSync							: BOOL;
+
+	fOut							: FLOAT;
+	bHold							: BOOL;
+
+	eMode							: E_CTRL_MODE;
+	stCTRL_PID_PARAMS				: ST_CTRL_PID_PARAMS;
+
+	eErrorId						: E_CTRL_ERRORCODES;
+	bError							: BOOL;
+	bARWactive						: BOOL;
+
+	fbCTRL_PID						: FB_CTRL_PID;
+
+	bInit							: BOOL	:= TRUE;
+	fbTON							: TON;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF bInit THEN
+
+	(* Init parameter struct *)
+	stCTRL_PID_PARAMS.tCtrlCycleTime	:= T#10MS;
+	stCTRL_PID_PARAMS.tTaskCycleTime	:= T#10MS;
+	stCTRL_PID_PARAMS.fKp				:= 1.0;			(* proportional gain Kp		*)
+	stCTRL_PID_PARAMS.tTn				:= T#1S;		(* integral action time Tn	*)
+	stCTRL_PID_PARAMS.tTv				:= T#200MS;		(* derivative action time Tv*)
+	stCTRL_PID_PARAMS.tTd				:= T#100MS;		(* damping time	Td			*)
+	stCTRL_PID_PARAMS.fOutMaxLimit		:= 100;			(* maximum output limit		*)
+	stCTRL_PID_PARAMS.fOutMinLimit		:= 0;			(* minimum output limit		*)
+
+	(* ACTIVE --> normal operation *)
+	eMode								:= eCTRL_MODE_ACTIVE;
+
+	(* Reset init flag *)
+	bInit								:= FALSE;
+	
+END_IF
+
+	(* Call controller function block *)
+fbCTRL_PID(		fSetpointValue			:= Temp_Camara_Set,
+					fActualValue		:= IOS.Temp_Camara_out,
+					fManSyncValue		:= fManSyncValue,
+					bSync				:= bSync,
+					eMode				:= eMode,
+					bHold				:= bHold,
+					stParams			:= stCTRL_PID_PARAMS,
+					fOut				=> fOut,
+					bARWactive			=> bARWactive,
+					eErrorId			=> eErrorId,
+					bError				=> bError
+			);
+	
+	(* Call output function only if ventilations is active (avoid overheating the heating element)*)	
+IF bError=FALSE THEN
+	IF IOs.IO_Out_Vent_Camara=TRUE THEN
+		Pcamara_Out(fIn:=fOut);
+	ELSE
+		Pcamara_Out(fIn:=0);
+	END_IF
+ELSE
+	Pcamara_Out(fIn:=0);
+	(*Escrever o erro para a HMI*)
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="PCamara">
+      <LineId Id="100" Count="0" />
+      <LineId Id="27" Count="14" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="42" Count="14" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="137" Count="3" />
+      <LineId Id="145" Count="2" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

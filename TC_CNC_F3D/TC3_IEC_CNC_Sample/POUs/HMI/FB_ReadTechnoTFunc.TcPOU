@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.6">
+  <POU Name="FB_ReadTechnoTFunc" Id="{bec86e2d-ff46-4d95-823b-db4b5a68ab14}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ReadTechnoTFunc
+VAR_INPUT
+   sNetId               : T_AmsNetId;
+   nPort                : T_AmsPort := 553;
+   nIdxGrp              : UDINT;
+   nIdxOffs             : UDINT;
+	nLen						: UDINT;
+   bStart               : BOOL;
+	pStr						: POINTER TO STRING;
+END_VAR
+VAR_OUTPUT
+   bBusy                : BOOL;
+   bErr                 : BOOL;
+END_VAR
+VAR
+   fbRead               : ADSREAD;
+   bStarted             : BOOL;
+   dest                 : UDINT;
+	i							: INT;
+	tmp						: STRING;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*     FB: FB_ReadTechnoTFunc                                *)
+(* --------------------------------------------------------- *)
+(*   Desc: Reads the technology information                  *)
+(*       : from the CNC                                      *)
+(* Author: MK                                                *)
+(*   Date: 21.12.2011                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+IF bStart = TRUE AND bStarted = FALSE THEN
+	bStarted := TRUE;
+	bErr := FALSE;
+	bBusy := TRUE;
+END_IF
+
+IF bStarted THEN
+   fbRead(NetID:=sNetId, Port:=nPort, IdxGrp:=nIdxGrp, IdxOffs:=nIdxOffs,
+         LEN:=nLen, DestAddr:=ADR(dest), READ:=bStarted, TMOUT:=DEFAULT_ADS_TIMEOUT);
+   IF NOT fbRead.Busy THEN
+      IF fbRead.Err THEN
+         bErr := TRUE;
+		ELSE
+			tmp := 'T';
+			tmp := CONCAT(tmp, UDINT_TO_STRING(dest));
+			pStr^ := tmp;
+      END_IF
+      fbRead(READ := FALSE);
+      bStarted := FALSE;
+      bBusy := FALSE;
+   END_IF
+END_IF
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4020.12">
+  <POU Name="CncPlcMessages" Id="{009e44f8-05d3-4777-9e80-201bc31a7f4f}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM CncPlcMessages
+VAR
+	bShowMessage		: BOOL;
+	
+	event1				: FB_SimpleAdsLogEvent;
+	event2				: FB_SimpleAdsLogEvent;
+	bStartEvent			: BOOL;
+	bStartEvent2		: BOOL;
+	i						: INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* ========================================================= *)
+(*    FUN: CncPlcMessages                                    *)
+(* --------------------------------------------------------- *)
+(*   Desc:                                                   *)
+(* Author: MK                                                *)
+(*   Date: 21.12.2011                                        *)
+(*   Rev.: 1.0                                               *)
+(* ========================================================= *)
+
+
+(* Messages *)
+MSGList1[5] := bShowMessage;
+MSGList1[6] := bShowMessage;
+MSGList1[7] := bShowMessage;
+
+(*FOR i:=1 TO 50 DO
+	MSGList2[i] := bShowMessage;
+END_FOR*)
+
+
+// Eventlogger
+(*
+event1(SourceID:=50, EventID:=3, bSetEvent:=bStartEvent);
+errId := event1.ErrId;
+
+event2(SourceID:=50, EventID:=4, bSetEvent:=bStartEvent2);
+*)]]></ST>
+    </Implementation>
+    <LineIds Name="CncPlcMessages">
+      <LineId Id="3" Count="7" />
+      <LineId Id="39" Count="1" />
+      <LineId Id="13" Count="15" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
