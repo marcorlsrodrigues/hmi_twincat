@@ -329,7 +329,8 @@ IF bModeStandby THEN
 	pChannel^.ProcessEndTime	:= DT#1970-01-01-00:00;		(* reset *)
 END_IF
 
-IF bModeAutomatic THEN
+(*IF bModeAutomatic THEN*)
+IF GVL.gvl_automaticMode THEN
 	bModeAutomatic := FALSE;
 	pChannel^.Mode.Standby		:= FALSE;
 	pChannel^.Mode.Auto			:= TRUE;
@@ -527,7 +528,7 @@ CASE currentMode OF
 END_CASE
 
 
-GVL.gvl_bstate_start:=FALSE;
+//GVL.gvl_bstate_start:=FALSE;
 
 bStateStart := FALSE;
 bStateStop := FALSE;
@@ -554,7 +555,9 @@ bStateSelect := FALSE;
       <LineId Id="252" Count="0" />
       <LineId Id="8" Count="0" />
       <LineId Id="253" Count="0" />
-      <LineId Id="9" Count="63" />
+      <LineId Id="9" Count="36" />
+      <LineId Id="261" Count="0" />
+      <LineId Id="46" Count="26" />
       <LineId Id="260" Count="0" />
       <LineId Id="73" Count="0" />
       <LineId Id="259" Count="0" />
